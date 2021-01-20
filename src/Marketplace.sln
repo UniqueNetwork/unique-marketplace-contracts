@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Marketplace.Backend", "Marketplace.Backend\Marketplace.Backend.csproj", "{58EA77DA-A87A-46C7-B6FC-5F6B7B945F6E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Polkadot", "..\polkadot_api_dotnet\Polkadot\Polkadot.csproj", "{20312570-AB5E-4AD1-ADFB-F76B8D878968}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SubstrateApi", "SubstrateApi", "{56DB1CE6-4E3C-4062-8D16-1C383FC01330}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Polkadot.BinarySerializer", "..\polkadot_api_dotnet\Polkadot.BinarySerializer\Polkadot.BinarySerializer.csproj", "{4CA6F4C5-CEAD-4257-95A8-52E19B0D330A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Schnorrkel", "..\polkadot_api_dotnet\Schnorrkel\Schnorrkel.csproj", "{9B625107-EDCB-4CEF-ABF0-BEF29B2BD4E7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{58EA77DA-A87A-46C7-B6FC-5F6B7B945F6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58EA77DA-A87A-46C7-B6FC-5F6B7B945F6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58EA77DA-A87A-46C7-B6FC-5F6B7B945F6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58EA77DA-A87A-46C7-B6FC-5F6B7B945F6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20312570-AB5E-4AD1-ADFB-F76B8D878968}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20312570-AB5E-4AD1-ADFB-F76B8D878968}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20312570-AB5E-4AD1-ADFB-F76B8D878968}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20312570-AB5E-4AD1-ADFB-F76B8D878968}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4CA6F4C5-CEAD-4257-95A8-52E19B0D330A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4CA6F4C5-CEAD-4257-95A8-52E19B0D330A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4CA6F4C5-CEAD-4257-95A8-52E19B0D330A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4CA6F4C5-CEAD-4257-95A8-52E19B0D330A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B625107-EDCB-4CEF-ABF0-BEF29B2BD4E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B625107-EDCB-4CEF-ABF0-BEF29B2BD4E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B625107-EDCB-4CEF-ABF0-BEF29B2BD4E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B625107-EDCB-4CEF-ABF0-BEF29B2BD4E7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{20312570-AB5E-4AD1-ADFB-F76B8D878968} = {56DB1CE6-4E3C-4062-8D16-1C383FC01330}
+		{4CA6F4C5-CEAD-4257-95A8-52E19B0D330A} = {56DB1CE6-4E3C-4062-8D16-1C383FC01330}
+		{9B625107-EDCB-4CEF-ABF0-BEF29B2BD4E7} = {56DB1CE6-4E3C-4062-8D16-1C383FC01330}
+	EndGlobalSection
+EndGlobal

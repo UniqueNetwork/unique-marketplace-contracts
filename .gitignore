@@ -1,2 +1,5 @@
 ﻿/.idea/*
+/src/.idea/*
 
+/src/**/bin/*
+/src/**/obj/*
