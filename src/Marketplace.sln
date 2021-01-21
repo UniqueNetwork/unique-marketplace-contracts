@@ -10,6 +10,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Polkadot.BinarySerializer",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Schnorrkel", "..\polkadot_api_dotnet\Schnorrkel\Schnorrkel.csproj", "{9B625107-EDCB-4CEF-ABF0-BEF29B2BD4E7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Marketplace.Common", "Marketplace.Common\Marketplace.Common.csproj", "{4A1002C5-0D8F-4FC6-A1DE-B23D08F3030B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Marketplace.Db", "Marketplace.Db\Marketplace.Db.csproj", "{6E1EDE42-EFC1-4BE0-AB8F-E8F5EC4EB8C5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +36,14 @@ Global
 		{9B625107-EDCB-4CEF-ABF0-BEF29B2BD4E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B625107-EDCB-4CEF-ABF0-BEF29B2BD4E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B625107-EDCB-4CEF-ABF0-BEF29B2BD4E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A1002C5-0D8F-4FC6-A1DE-B23D08F3030B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A1002C5-0D8F-4FC6-A1DE-B23D08F3030B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A1002C5-0D8F-4FC6-A1DE-B23D08F3030B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A1002C5-0D8F-4FC6-A1DE-B23D08F3030B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E1EDE42-EFC1-4BE0-AB8F-E8F5EC4EB8C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E1EDE42-EFC1-4BE0-AB8F-E8F5EC4EB8C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E1EDE42-EFC1-4BE0-AB8F-E8F5EC4EB8C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E1EDE42-EFC1-4BE0-AB8F-E8F5EC4EB8C5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{20312570-AB5E-4AD1-ADFB-F76B8D878968} = {56DB1CE6-4E3C-4062-8D16-1C383FC01330}

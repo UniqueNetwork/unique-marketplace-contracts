@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Marketplace.Db;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -16,17 +18,30 @@ namespace Marketplace.Backend
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IWebHostEnvironment env)
         {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables();
+            if (env.IsDevelopment())
+            {
+                builder = builder.AddUserSecrets<Startup>();
+            }
+            
+            var configurationRoot = builder.Build();
+            var configuration = new Configuration();
+            configurationRoot.Bind(configuration);
             Configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
+        public Configuration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
+            services.AddDbModule(Configuration);
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -54,6 +69,10 @@ namespace Marketplace.Backend
             {
                 endpoints.MapControllers();
             });
+
+            using var scope = app.ApplicationServices.CreateScope();
+            var context = scope.ServiceProvider.GetService<MarketplaceDbContext>();
+            context!.Database.Migrate();
         }
     }
 }

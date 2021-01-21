@@ -1,5 +1,6 @@
 ﻿/.idea/*
 /src/.idea/*
+/src/.vs/*
 
 /src/**/bin/*
 /src/**/obj/*
