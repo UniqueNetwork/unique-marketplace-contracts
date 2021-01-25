@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Marketplace.Backend.Offers;
+using Marketplace.Backend.Trades;
 using Marketplace.Db;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -47,6 +49,10 @@ namespace Marketplace.Backend
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Marketplace.Backend", Version = "v1" });
             });
+
+            services.AddScoped<IOfferService, OfferService>();
+            services.AddScoped<ITradeService, TradeService>();
+            services.AddScoped<Configuration>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
