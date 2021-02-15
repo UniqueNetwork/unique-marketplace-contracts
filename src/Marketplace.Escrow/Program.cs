@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Marketplace.Db;
+using Marketplace.Escrow.KusamaScanner;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -31,10 +33,11 @@ namespace Marketplace.Escrow
                     hostContext.Configuration.Bind(configuration);
                     services.AddOptions<Configuration>();
                     services.AddDbModule(configuration);
-                    services.AddSingleton<IHostedService, DaemonService>();
+                    services.AddSingleton<IHostedService, KusamaScannerService>();
                     services.AddSingleton(configuration);
                 })
-                .ConfigureLogging((hostingContext, logging) => {
+                .ConfigureLogging((hostingContext, logging) =>
+                {
                     logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
                     logging.AddConsole();
                 });

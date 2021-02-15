@@ -11,6 +11,8 @@ namespace Marketplace.Db
     {
         public DbSet<Offer> Offers { get; set; } = null!;
         public DbSet<Trade> Trades { get; set; } = null!;
+        public DbSet<KusamaProcessedBlock> KusamaProcessedBlocks { get; set; } = null!;
+        public DbSet<KusamaTransaction> KusamaTransactions { get; set; } = null!;
 
         public MarketplaceDbContext(DbContextOptions options) : base(options)
         {
@@ -26,6 +28,10 @@ namespace Marketplace.Db
 
             modelBuilder.Entity<Offer>()
                 .Property(e => e.Price)
+                .HasConversion(bigIntegerConverter);
+
+            modelBuilder.Entity<KusamaTransaction>()
+                .Property(e => e.Amount)
                 .HasConversion(bigIntegerConverter);
         }
     }
