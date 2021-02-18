@@ -30,9 +30,8 @@ namespace Marketplace.Escrow.KusamaScanner
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<KusamaScannerService> _logger;
         private readonly Configuration _configuration;
-        private Application? _application = null;
+        private SafeApplication? _application = null;
         private PublicKey _marketplacePublicKey;
-        private TaskCompletionSource<int>? _runningTask = null;
 
         public KusamaScannerService(IServiceScopeFactory scopeFactory, ILogger<KusamaScannerService> logger, Configuration configuration): base(logger, scopeFactory, configuration.KusamaEndpoint)
         {
@@ -44,49 +43,38 @@ namespace Marketplace.Escrow.KusamaScanner
 
         protected override Task ProcessBlock(ulong blockNumber, CancellationToken stoppingToken)
         {
-            if (_runningTask != null)
-            {
-                throw new Exception("Something wrong, can't run multiple instances.");
-            }
-            _runningTask = new ();
-            var task = _runningTask.Task;
+            TaskCompletionSource<int>? myTask = new ();
+            var task = myTask.Task;
             if (_application == null)
             {
-                _application = CreateApplication(ex =>
+                _application = SafeApplication.CreateApplication(ex =>
                 {
                     _logger.LogError(ex, "Kusama listener failed");
-                    _runningTask.SetException(ex);
-                    _runningTask = null;
+                    Interlocked.Exchange(ref myTask, null)?.SetException(ex);
+
                     _application?.Dispose();
                     _application = null;
-                });
-                _application.Connect(_configuration.KusamaEndpoint);
+                }, _logger);
+                _application.Application.Connect(_configuration.KusamaEndpoint);
             }
-
-            var myTask = _runningTask;
 
             Run(blockNumber, stoppingToken).ContinueWith(t =>
             {
-                if (myTask != _runningTask)
-                {
-                    return;
-                }
                 if (t.IsCanceled)
                 {
-                    _runningTask.SetCanceled();
+                    Interlocked.Exchange(ref myTask, null)?.SetCanceled();
                 }
 
                 if (t.IsFaulted)
                 {
                     _logger.LogError(t.Exception, "Kusama listener failed");
-                    _runningTask.SetException(t.Exception!);
+                    Interlocked.Exchange(ref myTask, null)?.SetException(t.Exception!);
                 }
 
                 if (t.IsCompletedSuccessfully)
                 {
-                    _runningTask.SetResult(0);
+                    Interlocked.Exchange(ref myTask, null)?.SetResult(0);
                 }
-                _runningTask = null;
             });
             
             return task;
@@ -94,13 +82,26 @@ namespace Marketplace.Escrow.KusamaScanner
 
         private async Task Run(ulong blockNumber, CancellationToken stoppingToken)
         {
-            var blockHash = _application!.GetBlockHash(new GetBlockHashParams() {BlockNumber = blockNumber}).Hash;
-            var block = _application.GetBlock(new GetBlockParams() {BlockHash = blockHash});
+            void OnHealthCheck()
+            {
+                stoppingToken.ThrowIfCancellationRequested();
+                Interlocked.Exchange(ref _application, null)?.Dispose();
+                
+            }
+            
+            _application?.HealthCheck(TimeSpan.FromMinutes(1), OnHealthCheck);
+            var blockHash = _application!.Application!.GetBlockHash(new GetBlockHashParams() {BlockNumber = blockNumber}).Hash;
+            _application.HealthCheck(TimeSpan.FromMinutes(1), OnHealthCheck);
+            var block = _application.Application.GetBlock(new GetBlockParams() {BlockHash = blockHash});
+            _application.HealthCheck(TimeSpan.FromMinutes(1), OnHealthCheck);
             var eventsString =
-                _application.StorageApi.GetStorage("system", "events", new GetBlockHashParams() {BlockNumber = blockNumber});
-            var eventsList = _application.Serializer.Deserialize<EventList>(eventsString.ToByteArray());
+                _application.Application.StorageApi.GetStorage("System", "Events", new GetBlockHashParams() {BlockNumber = blockNumber});
+            _application.CancelHealthCheck();
+
+            var eventsList = _application.Application.Serializer.Deserialize<EventList>(eventsString.HexToByteArray());
             var extrinsics = block.Block.Extrinsic
-                .Select(e => _application.Serializer.DeserializeAssertReadAll<DeserializedExtrinsic>(e!.ToByteArray()));
+                .Select(e => e!.HexToByteArray())
+                .Select(e => _application.Application.Serializer.DeserializeAssertReadAll<DeserializedExtrinsic>(e));
 
             var actions = ProcessExtrinsics(extrinsics, eventsList, blockNumber, stoppingToken).ToList();
 
@@ -110,6 +111,14 @@ namespace Marketplace.Escrow.KusamaScanner
             await using var transaction = await dbContext!.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, stoppingToken);
             try
             {
+                var lastProcessedBlock =
+                    await dbContext.KusamaProcessedBlocks.FirstOrDefaultAsync(b => b.BlockNumber == blockNumber, stoppingToken);
+                if (lastProcessedBlock != null)
+                {
+                    await transaction.RollbackAsync(stoppingToken);
+                    return;
+                }
+                
                 await SaveProcessedBlock(blockNumber, dbContext, stoppingToken);
 
                 foreach (var action in actions)

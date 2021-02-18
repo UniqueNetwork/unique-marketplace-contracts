@@ -21,8 +21,9 @@ namespace Marketplace.Escrow.SubstrateScanner
         private readonly string _nodeEndpoint;
         private readonly TaskCompletionSource<int> _executionCompletionSource = new();
         private readonly Channel<ulong> _blocksChannel = Channel.CreateUnbounded<ulong>();
-        private ulong _lastKusamaBlock = 0;
+        private ulong _lastScheduledBlock = 0;
         private ulong _lastProcessedBlock = 0;
+        private object _blockSchedulerLock = new object();
 
         protected SubstrateScannerService(ILogger logger, IServiceScopeFactory scopeFactory, string nodeEndpoint)
         {
@@ -30,22 +31,14 @@ namespace Marketplace.Escrow.SubstrateScanner
             _scopeFactory = scopeFactory;
             _nodeEndpoint = nodeEndpoint;
         }
-
-        public Application CreateApplication(Action<Exception> onError)
-        {
-            var param = new JsonRpcParams {JsonrpcVersion = "2.0"};
-
-            var logger = new SubstrateApiLogger(_logger);
-            var jsonRpc = new JsonRpc(new Wsclient(logger), logger, param, onError);
-
-            return new Application(logger, jsonRpc, Application.DefaultSubstrateSettings());
-        }
         
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _scopeFactory.MigrateDb();
             _logger.LogInformation("Started {ServiceName}", GetType().FullName);
+#pragma warning disable 4014
             InitBlocksSubscription(stoppingToken);
+#pragma warning restore 4014
 
             return _executionCompletionSource.Task;
         }
@@ -55,8 +48,8 @@ namespace Marketplace.Escrow.SubstrateScanner
             using var scope = _scopeFactory.CreateScope();
             var context = scope.ServiceProvider.GetService<MarketplaceDbContext>();
             var set = context!.Set<TDbBlockModel>();
-            _lastKusamaBlock = await set.MaxAsync(s => (ulong?) s.BlockNumber, stoppingToken) + 1 ?? 1;
-            _lastProcessedBlock = _lastKusamaBlock;
+            _lastProcessedBlock = await set.MaxAsync(s => (ulong?) s.BlockNumber, stoppingToken) ?? 0;
+            _lastScheduledBlock = _lastProcessedBlock;
             SubscribeBlocks(stoppingToken);
             StartProcessing(stoppingToken);
         }
@@ -88,28 +81,29 @@ namespace Marketplace.Escrow.SubstrateScanner
         {
             stoppingToken.ThrowIfCancellationRequested();
 
-            await foreach (var blockNumber in _blocksChannel.Reader.ReadAllAsync(stoppingToken))
+            while(!stoppingToken.IsCancellationRequested)
             {
+                var blockNumber = await _blocksChannel.Reader.ReadAsync(stoppingToken);
                 var successfullyCompleted = false;
                 do
                 {
                     stoppingToken.ThrowIfCancellationRequested();
                     try
                     {
-                        _logger.LogInformation("Processing block # {BlockNumber}", _lastProcessedBlock);
+                        _logger.LogInformation("Processing block # {BlockNumber}", _lastProcessedBlock + 1);
                         stoppingToken.ThrowIfCancellationRequested();
-                        await ProcessBlock(_lastProcessedBlock, stoppingToken);
-                        _logger.LogInformation("Finished processing block # {BlockNumber}", _lastProcessedBlock);
+                        await ProcessBlock(_lastProcessedBlock + 1, stoppingToken);
+                        _logger.LogInformation("Finished processing block # {BlockNumber}", _lastProcessedBlock + 1);
                         _lastProcessedBlock++;
                         successfullyCompleted = true;
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Failed to process block # ${BlockNumber}", _lastProcessedBlock);
+                        _logger.LogError(ex, "Failed to process block # ${BlockNumber}", _lastProcessedBlock + 1);
                         await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
                     }
 
-                } while (successfullyCompleted);
+                } while (!successfullyCompleted);
             }
         }
 
@@ -126,14 +120,19 @@ namespace Marketplace.Escrow.SubstrateScanner
 
         private void SubscribeBlocks(CancellationToken stoppingToken)
         {
-            Application? application = null;
-            application = CreateApplication(ex =>
+            void Resubscribe()
             {
-                if (application == null)
+                if (!stoppingToken.IsCancellationRequested)
                 {
-                    return;
+                    // ReSharper disable once MethodSupportsCancellation
+                    Task.Delay(TimeSpan.FromSeconds(30), stoppingToken)
+                        .ContinueWith(_ => SubscribeBlocks(stoppingToken), stoppingToken);
                 }
-                
+            }
+
+            SafeApplication? application = null;
+            application = SafeApplication.CreateApplication(ex =>
+            {
                 _logger.LogError(ex, "Application failed in service {ServiceName}, reconnecting", GetType().FullName);
                 try
                 {
@@ -143,35 +142,46 @@ namespace Marketplace.Escrow.SubstrateScanner
                 catch (Exception)
                 {
                 }
-                finally
-                {
-                    application = null;
-                }
 
-                if (!stoppingToken.IsCancellationRequested)
-                {
-                    // ReSharper disable once MethodSupportsCancellation
-                    Task.Delay(TimeSpan.FromSeconds(30), stoppingToken)
-                        .ContinueWith(_ => SubscribeBlocks(stoppingToken), stoppingToken);
-                }
-            });
-            application.Connect(_nodeEndpoint);
+                Resubscribe();
+            }, _logger);
+            application?.Application?.Connect(_nodeEndpoint);
 
-            application.SubscribeBlockNumber(block =>
+            
+            Action healthCheck = () =>
             {
-                stoppingToken.ThrowIfCancellationRequested();
-                for (ulong i = _lastKusamaBlock; i <= (ulong)block; i++)
+                application?.HealthCheck(TimeSpan.FromMinutes(2), () =>
                 {
-                    _logger.LogInformation("Scheduled block # {BlockNumber}", _lastKusamaBlock);
-                    _lastKusamaBlock++;
-                    _blocksChannel.Writer.WriteAsync(i, stoppingToken).GetAwaiter().GetResult();
-                }
-                
-                if (stoppingToken.IsCancellationRequested)
+                    application?.Dispose();
+                    if (stoppingToken.IsCancellationRequested)
+                    {
+                        Resubscribe();
+                    }
+                });
+            };
+            
+            application?.Application?.SubscribeBlockNumber(block =>
+            {
+                application?.CancelHealthCheck();
+                lock (_blockSchedulerLock)
                 {
-                    application.Dispose();
+                    while (_lastScheduledBlock + 1 <= (ulong)block)
+                    {
+                        if (stoppingToken.IsCancellationRequested)
+                        {
+                            application?.Dispose();
+                            return;
+                        }
+
+                        _logger.LogInformation("Scheduled block # {BlockNumber}", _lastScheduledBlock + 1);
+                        _blocksChannel.Writer.WriteAsync(_lastScheduledBlock + 1, stoppingToken).GetAwaiter().GetResult();
+                        _lastScheduledBlock++;
+                    }
                 }
+
+                healthCheck();
             });
+            healthCheck();
         }
 
         protected abstract Task ProcessBlock(ulong blockNumber, CancellationToken stoppingToken);

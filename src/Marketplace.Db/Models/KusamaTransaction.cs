@@ -16,8 +16,8 @@ namespace Marketplace.Db.Models
         /// Positive when marketplace receives kusama, negative when marketplace uses it to pay for tokens or withdrawals. 
         /// </summary>
         public BigInteger Amount { get; set; }
-        
-        public string Description { get; set; }
+
+        public string Description { get; set; } = null!;
 
         public string AccountPublicKey { get; set; } = null!;
         
