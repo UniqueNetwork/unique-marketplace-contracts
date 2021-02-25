@@ -13,5 +13,11 @@ namespace Marketplace.Escrow
         public string MarketplaceKusamaAddress { get; set; } = null!;
 
         public PublicKey MarketplaceKusamaPublicKey => AddressUtils.GetPublicKeyFromAddr(MarketplaceKusamaAddress);
+
+        public string UniqueEndpoint { get; set; } = null!;
+
+        public string MarketplaceUniqueAddress { get; set; } = null!;
+
+        public PublicKey MarketplaceUniquePublicKey => AddressUtils.GetPublicKeyFromAddr(MarketplaceUniqueAddress);
     }
 }

@@ -14,7 +14,7 @@ using Polkadot.Api;
 
 namespace Marketplace.Escrow.SubstrateScanner
 {
-    public abstract class SubstrateScannerService<TDbBlockModel>: BackgroundService where TDbBlockModel: class, IProcessedBlock, new()
+    public abstract class SubstrateBlockScannerService<TDbBlockModel>: BackgroundService where TDbBlockModel: class, IProcessedBlock, new()
     {
         private readonly ILogger _logger;
         private readonly IServiceScopeFactory _scopeFactory;
@@ -25,7 +25,7 @@ namespace Marketplace.Escrow.SubstrateScanner
         private ulong _lastProcessedBlock = 0;
         private object _blockSchedulerLock = new object();
 
-        protected SubstrateScannerService(ILogger logger, IServiceScopeFactory scopeFactory, string nodeEndpoint)
+        protected SubstrateBlockScannerService(ILogger logger, IServiceScopeFactory scopeFactory, string nodeEndpoint)
         {
             _logger = logger;
             _scopeFactory = scopeFactory;
@@ -34,7 +34,20 @@ namespace Marketplace.Escrow.SubstrateScanner
         
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _scopeFactory.MigrateDb();
+            var migrated = false;
+            do
+            {
+                try
+                {
+                    _scopeFactory.MigrateDb();
+                    migrated = true;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to migrate database to latest version");
+                    Task.Delay(TimeSpan.FromSeconds(30), stoppingToken).GetAwaiter().GetResult();
+                }
+            } while (!migrated);
             _logger.LogInformation("Started {ServiceName}", GetType().FullName);
 #pragma warning disable 4014
             InitBlocksSubscription(stoppingToken);

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Marketplace.Db;
 using Marketplace.Escrow.KusamaScanner;
+using Marketplace.Escrow.UniqueScanner;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,7 +34,8 @@ namespace Marketplace.Escrow
                     hostContext.Configuration.Bind(configuration);
                     services.AddOptions<Configuration>();
                     services.AddDbModule(configuration);
-                    services.AddSingleton<IHostedService, KusamaScannerService>();
+                    services.AddHostedService<KusamaBlockScannerService>();
+                    services.AddHostedService<UniqueBlockScannerService>();
                     services.AddSingleton(configuration);
                 })
                 .ConfigureLogging((hostingContext, logging) =>
