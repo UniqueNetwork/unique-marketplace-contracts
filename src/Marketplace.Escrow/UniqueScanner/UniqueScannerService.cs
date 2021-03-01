@@ -51,7 +51,7 @@ namespace Marketplace.Escrow.UniqueScanner
 
             return async dbContext =>
             {
-                dbContext.NftIncomeTransactions.Add(new NftIncomeTransaction()
+                await dbContext.NftIncomeTransactions.AddAsync(new NftIncomeTransaction()
                 {
                     Deposited = false,
                     Id = Guid.NewGuid(),

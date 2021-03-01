@@ -30,7 +30,6 @@ namespace Marketplace.Escrow.KusamaScanner
     {
         private readonly ILogger<KusamaBlockScannerService> _logger;
         private readonly Configuration _configuration;
-        private SafeApplication? _application = null;
         private PublicKey _marketplacePublicKey;
 
         public KusamaBlockScannerService(IServiceScopeFactory scopeFactory, ILogger<KusamaBlockScannerService> logger, Configuration configuration): base(scopeFactory, logger, configuration.KusamaEndpoint, IsolationLevel.RepeatableRead)
@@ -42,7 +41,6 @@ namespace Marketplace.Escrow.KusamaScanner
 
         protected override IEnumerable<Func<MarketplaceDbContext, Task>> ProcessExtrinsics(IEnumerable<DeserializedExtrinsic> extrinsics, ulong blockNumber, CancellationToken stoppingToken)
         {
-            uint index = 0;
             foreach (var extrinsic in extrinsics)
             {
                 Func<MarketplaceDbContext, Task>? handler = extrinsic.Extrinsic.Call.Call switch

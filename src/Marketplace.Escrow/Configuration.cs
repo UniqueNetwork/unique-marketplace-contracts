@@ -19,5 +19,9 @@ namespace Marketplace.Escrow
         public string MarketplaceUniqueAddress { get; set; } = null!;
 
         public PublicKey MarketplaceUniquePublicKey => AddressUtils.GetPublicKeyFromAddr(MarketplaceUniqueAddress);
+
+        public string MatcherContractAddress { get; set; } = null!;
+
+        public PublicKey MatcherContractPublicKey => AddressUtils.GetPublicKeyFromAddr(MatcherContractAddress);
     }
 }
