@@ -17,11 +17,11 @@ namespace Marketplace.Escrow.UniqueScanner
 {
     public class UniqueBlockScannerService : ExtrinsicBlockScannerService<UniqueProcessedBlock>
     {
-        private PublicKey _marketplaceAccount;
+        private readonly Configuration _configuration;
 
         public UniqueBlockScannerService(IServiceScopeFactory scopeFactory, ILogger<UniqueBlockScannerService> logger, Configuration configuration) : base(scopeFactory, logger, configuration.UniqueEndpoint, IsolationLevel.RepeatableRead)
         {
-            _marketplaceAccount = configuration.MarketplaceUniquePublicKey;
+            _configuration = configuration;
         }
 
         protected override IEnumerable<Func<MarketplaceDbContext, Task>> ProcessExtrinsics(IEnumerable<DeserializedExtrinsic> extrinsics, ulong blockNumber, CancellationToken stoppingToken)
@@ -44,7 +44,7 @@ namespace Marketplace.Escrow.UniqueScanner
 
         private Func<MarketplaceDbContext, Task>? HandleTransfer(TransferCall transferCall, PublicKey sender, ulong blockNumber)
         {
-            if (!transferCall.Recipient.Bytes.SequenceEqual(_marketplaceAccount.Bytes))
+            if (!transferCall.Recipient.Bytes.SequenceEqual(_configuration.MarketplaceUniquePublicKey.Bytes))
             {
                 return null;
             }

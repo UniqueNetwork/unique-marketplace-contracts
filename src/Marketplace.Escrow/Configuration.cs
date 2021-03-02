@@ -1,4 +1,5 @@
 ﻿using Marketplace.Db;
+using Marketplace.Escrow.MatcherContract.Calls;
 using Polkadot.DataStructs;
 using Polkadot.Utils;
 
@@ -23,5 +24,10 @@ namespace Marketplace.Escrow
         public string MatcherContractAddress { get; set; } = null!;
 
         public PublicKey MatcherContractPublicKey => AddressUtils.GetPublicKeyFromAddr(MatcherContractAddress);
+        
+        public string MarketplacePrivateKey { get; set; }
+
+
+        public byte[] MarketplacePrivateKeyBytes => MarketplacePrivateKey.HexToByteArray();
     }
 }

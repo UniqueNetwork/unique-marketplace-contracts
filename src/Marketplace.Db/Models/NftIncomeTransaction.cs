@@ -24,6 +24,9 @@ namespace Marketplace.Db.Models
 
         [Required]
         public string OwnerPublicKey { get; set; } = null!;
+        
+        [ConcurrencyCheck]
+        public DateTime? LockTime { get; set; }
 
         [NotMapped]
         public byte[] OwnerPublicKeyBytes
