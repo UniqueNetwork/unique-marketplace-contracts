@@ -21,6 +21,13 @@ namespace Marketplace.Db.Models
 
         public string AccountPublicKey { get; set; } = null!;
         
+        [NotMapped]
+        public byte[] AccountPublicKeyBytes
+        {
+            get => Convert.FromBase64String(AccountPublicKey);
+            set => AccountPublicKey = Convert.ToBase64String(value);
+        }
+
         [ForeignKey(nameof(Block))]
         public ulong? BlockId { get; set; }
 
@@ -30,7 +37,7 @@ namespace Marketplace.Db.Models
         /// Someone sent kusama to marketplace.
         /// </summary>
         /// <returns></returns>
-        public static KusamaTransaction Income(BigInteger amount, string accountPublicKey, ulong blockId)
+        public static KusamaTransaction Income(BigInteger amount, byte[] accountPublicKey, ulong blockId)
         {
             if (amount <= 0)
             {
@@ -42,7 +49,7 @@ namespace Marketplace.Db.Models
                 Amount = amount,
                 Id = Guid.NewGuid(),
                 Description = $"Transfered to marketplace",
-                AccountPublicKey = accountPublicKey,
+                AccountPublicKeyBytes = accountPublicKey,
                 BlockId = blockId,
             };
         }

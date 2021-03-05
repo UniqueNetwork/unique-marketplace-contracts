@@ -13,6 +13,8 @@ namespace Marketplace.Db
         public DbSet<Trade> Trades { get; set; } = null!;
         public DbSet<KusamaProcessedBlock> KusamaProcessedBlocks { get; set; } = null!;
         public DbSet<KusamaTransaction> KusamaTransactions { get; set; } = null!;
+        public DbSet<UniqueProcessedBlock> UniqueProcessedBlocks { get; set; } = null!;
+        public DbSet<NftIncomeTransaction> NftIncomeTransactions { get; set; } = null!;
 
         public MarketplaceDbContext(DbContextOptions options) : base(options)
         {
@@ -32,6 +34,14 @@ namespace Marketplace.Db
 
             modelBuilder.Entity<KusamaTransaction>()
                 .Property(e => e.Amount)
+                .HasConversion(bigIntegerConverter);
+
+            modelBuilder.Entity<NftIncomeTransaction>()
+                .HasIndex("Deposited", "LockTime")
+                .HasFilter($"\"Deposited\" is not true");
+                
+            modelBuilder.Entity<NftIncomeTransaction>()
+                .Property(e => e.Value)
                 .HasConversion(bigIntegerConverter);
         }
     }
