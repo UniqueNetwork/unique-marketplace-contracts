@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using Marketplace.Db;
 using Marketplace.Db.Models;
 using Marketplace.Escrow.Extensions;
-using Marketplace.Escrow.KusamaScanner;
 using Marketplace.Escrow.SubstrateScanner;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polkadot.Api;
@@ -28,14 +28,16 @@ namespace Marketplace.Escrow.TransactionScanner
         private readonly ILogger _logger;
         private readonly string _nodeEndpoint;
         private readonly IsolationLevel _isolationLevel;
+        private readonly PublicKey _matcherContract;
         protected SafeApplication? _application = null;
 
-        public ExtrinsicBlockScannerService(IServiceScopeFactory scopeFactory, ILogger logger, string nodeEndpoint, IsolationLevel isolationLevel): base(logger, scopeFactory, nodeEndpoint)
+        public ExtrinsicBlockScannerService(IServiceScopeFactory scopeFactory, ILogger logger, string nodeEndpoint, IsolationLevel isolationLevel, PublicKey matcherContract): base(logger, scopeFactory, nodeEndpoint, matcherContract)
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
             _nodeEndpoint = nodeEndpoint;
             _isolationLevel = isolationLevel;
+            _matcherContract = matcherContract;
         }
 
         protected override Task ProcessBlock(ulong blockNumber, CancellationToken stoppingToken)
@@ -46,12 +48,12 @@ namespace Marketplace.Escrow.TransactionScanner
             {
                 _application = SafeApplication.CreateApplication(ex =>
                 {
-                    _logger.LogError(ex, "Kusama listener failed");
+                    _logger.LogError(ex, "{ServiceName} listener failed", GetType().FullName);
                     Interlocked.Exchange(ref myTask, null)?.SetException(ex);
 
                     _application?.Dispose();
                     _application = null;
-                }, _logger);
+                }, _logger, _matcherContract);
                 _application.Application.Connect(_nodeEndpoint);
             }
 
@@ -64,7 +66,7 @@ namespace Marketplace.Escrow.TransactionScanner
 
                 if (t.IsFaulted)
                 {
-                    _logger.LogError(t.Exception, "Kusama listener failed");
+                    _logger.LogError(t.Exception, "Extrinsic listener failed");
                     Interlocked.Exchange(ref myTask, null)?.SetException(t.Exception!);
                 }
 
@@ -92,14 +94,15 @@ namespace Marketplace.Escrow.TransactionScanner
             var block = _application.Application.GetBlock(new GetBlockParams() {BlockHash = blockHash});
             _application.HealthCheck(TimeSpan.FromMinutes(1), OnHealthCheck);
             var eventsString =
-                _application.Application.StorageApi.GetStorage("System", "Events", new GetBlockHashParams() {BlockNumber = blockNumber});
+                    _application.Application.StorageApi.GetStorage("System", "Events", new GetBlockHashParams() {BlockNumber = blockNumber});
             _application.CancelHealthCheck();
 
             var eventsList = _application.Application.Serializer.Deserialize<EventList>(eventsString.HexToByteArray());
             var extrinsics = block.Block.Extrinsic
                 .Select(e => e!.HexToByteArray())
                 .Select(e => _application.Application.Serializer.DeserializeAssertReadAll<DeserializedExtrinsic>(e))
-                .Where((_, index) => eventsList.ExtrinsicSuccess((uint)index));
+                .Where((_, index) => eventsList.ExtrinsicSuccess((uint)index))
+                .ToList();
 
             var actions = ProcessExtrinsics(extrinsics, blockNumber, stoppingToken).ToList();
 
@@ -110,7 +113,7 @@ namespace Marketplace.Escrow.TransactionScanner
             try
             {
                 var lastProcessedBlock =
-                    await dbContext.KusamaProcessedBlocks.FirstOrDefaultAsync(b => b.BlockNumber == blockNumber, stoppingToken);
+                    await dbContext.Set<TDbBlockModel>().FirstOrDefaultAsync(b => b.BlockNumber == blockNumber, stoppingToken);
                 if (lastProcessedBlock != null)
                 {
                     await transaction.RollbackAsync(stoppingToken);
@@ -121,7 +124,7 @@ namespace Marketplace.Escrow.TransactionScanner
 
                 foreach (var action in actions)
                 {
-                    await action(dbContext);
+                    await (action.OnSaveToDb?.Invoke(dbContext) ?? ValueTask.CompletedTask);
                 }
 
                 await dbContext.SaveChangesAsync(stoppingToken);
@@ -135,9 +138,13 @@ namespace Marketplace.Escrow.TransactionScanner
                 await (transaction?.RollbackAsync() ?? Task.CompletedTask);
                 throw;
             }
+            foreach (var action in actions)
+            {
+                await (action.OnAfterSaveToDb?.Invoke() ?? ValueTask.CompletedTask);
+            }
         }
 
-        protected abstract IEnumerable<Func<MarketplaceDbContext, Task>> ProcessExtrinsics(IEnumerable<DeserializedExtrinsic> extrinsics, ulong blockNumber, CancellationToken stoppingToken);
+        protected abstract IEnumerable<ExtrinsicHandler> ProcessExtrinsics(IEnumerable<DeserializedExtrinsic> extrinsics, ulong blockNumber, CancellationToken stoppingToken);
 
         public override void Dispose()
         {

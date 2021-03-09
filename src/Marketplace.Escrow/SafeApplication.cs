@@ -2,8 +2,10 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Marketplace.Escrow.ApiLogger;
+using Marketplace.Escrow.Extensions;
 using Microsoft.Extensions.Logging;
 using Polkadot.Api;
+using Polkadot.DataStructs;
 
 namespace Marketplace.Escrow
 {
@@ -21,14 +23,20 @@ namespace Marketplace.Escrow
         }
 
 
-        public static SafeApplication CreateApplication(Action<Exception> onError, ILogger logger)
+        public static SafeApplication CreateApplication(Action<Exception> onError, ILogger logger, PublicKey? matcherContract)
         {
             var param = new JsonRpcParams {JsonrpcVersion = "2.0"};
 
             var substrateLogger = new SubstrateApiLogger(logger);
             var jsonRpc = new JsonRpc(new Wsclient(substrateLogger), substrateLogger, param, onError);
 
-            return new SafeApplication(new Application(substrateLogger, jsonRpc, Application.DefaultSubstrateSettings()));
+            var settings = Application.DefaultSubstrateSettings();
+            if (matcherContract != null)
+            {
+                settings = settings.RegisterMatcherContract(matcherContract);
+            }
+                
+            return new SafeApplication(new Application(substrateLogger, jsonRpc, settings));
         }
 
         public void HealthCheck(TimeSpan timeout, Action onHealthCheck)

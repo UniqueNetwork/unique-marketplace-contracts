@@ -24,8 +24,8 @@ namespace Marketplace.Escrow
         public string MatcherContractAddress { get; set; } = null!;
 
         public PublicKey MatcherContractPublicKey => AddressUtils.GetPublicKeyFromAddr(MatcherContractAddress);
-        
-        public string MarketplacePrivateKey { get; set; }
+
+        public string MarketplacePrivateKey { get; set; } = null!;
 
 
         public byte[] MarketplacePrivateKeyBytes => MarketplacePrivateKey.HexToByteArray();

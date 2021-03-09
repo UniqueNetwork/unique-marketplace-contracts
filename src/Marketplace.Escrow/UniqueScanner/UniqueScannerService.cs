@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Marketplace.Db;
 using Marketplace.Db.Models;
+using Marketplace.Escrow.EventBus;
+using Marketplace.Escrow.MatcherContract.Calls;
 using Marketplace.Escrow.TransactionScanner;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -18,31 +20,37 @@ namespace Marketplace.Escrow.UniqueScanner
     public class UniqueBlockScannerService : ExtrinsicBlockScannerService<UniqueProcessedBlock>
     {
         private readonly Configuration _configuration;
+        private readonly IEventBusService _eventBusService;
 
-        public UniqueBlockScannerService(IServiceScopeFactory scopeFactory, ILogger<UniqueBlockScannerService> logger, Configuration configuration) : base(scopeFactory, logger, configuration.UniqueEndpoint, IsolationLevel.RepeatableRead)
+        public UniqueBlockScannerService(IServiceScopeFactory scopeFactory, ILogger<UniqueBlockScannerService> logger, Configuration configuration, IEventBusService eventBusService) : base(scopeFactory, logger, configuration.UniqueEndpoint, IsolationLevel.RepeatableRead, configuration.MatcherContractPublicKey)
         {
             _configuration = configuration;
+            _eventBusService = eventBusService;
         }
 
-        protected override IEnumerable<Func<MarketplaceDbContext, Task>> ProcessExtrinsics(IEnumerable<DeserializedExtrinsic> extrinsics, ulong blockNumber, CancellationToken stoppingToken)
+        protected override IEnumerable<ExtrinsicHandler> ProcessExtrinsics(IEnumerable<DeserializedExtrinsic> extrinsics, ulong blockNumber, CancellationToken stoppingToken)
         {
             foreach (var extrinsic in extrinsics)
             {
-                Func<MarketplaceDbContext, Task>? handler = extrinsic.Extrinsic.Call.Call switch
+                Func<MarketplaceDbContext, ValueTask>? handler = extrinsic.Extrinsic.Call.Call switch
                 {
-                    CallCall c => HandleContractCall(c),
+                    CallCall c => HandleContractCall(c, extrinsic.Extrinsic.Prefix.Value.AsT1.Address.PublicKey),
                     TransferCall t => HandleTransfer(t, extrinsic.Extrinsic.Prefix.Value.AsT1.Address.PublicKey, blockNumber),
                     _ => null
                 };
 
                 if (handler != null)
                 {
-                    yield return handler;
+                    yield return new ExtrinsicHandler()
+                    {
+                        OnSaveToDb = handler,
+                        OnAfterSaveToDb = () => _eventBusService.PublishRegisterNft(stoppingToken),
+                    };
                 }
             }
         }
 
-        private Func<MarketplaceDbContext, Task>? HandleTransfer(TransferCall transferCall, PublicKey sender, ulong blockNumber)
+        private Func<MarketplaceDbContext, ValueTask>? HandleTransfer(TransferCall transferCall, PublicKey sender, ulong blockNumber)
         {
             if (!transferCall.Recipient.Bytes.SequenceEqual(_configuration.MarketplaceUniquePublicKey.Bytes))
             {
@@ -64,9 +72,37 @@ namespace Marketplace.Escrow.UniqueScanner
             };
         }
 
-        private Func<MarketplaceDbContext, Task>? HandleContractCall(CallCall callCall)
+        private Func<MarketplaceDbContext, ValueTask>? HandleContractCall(CallCall callCall, PublicKey sender)
         {
-            throw new NotImplementedException();
+            if (!callCall.Dest.Bytes.SequenceEqual(_configuration.MatcherContractPublicKey.Bytes))
+            {
+                return null;
+            }
+
+            return callCall.Parameters switch
+            {
+                AskParameter a => HandleAsk(a, sender),
+                _ => null
+            };
+        }
+
+        private Func<MarketplaceDbContext, ValueTask>? HandleAsk(AskParameter askParameter, PublicKey sender)
+        {
+            return async dbContext =>
+            {
+                await dbContext.Offers.AddAsync(new Offer()
+                {
+                    Id = Guid.NewGuid(),
+                    Price = askParameter.Price.Value,
+                    CollectionId = askParameter.CollectionId,
+                    TokenId = askParameter.TokenId,
+                    CreationDate = DateTime.UtcNow,
+                    OfferStatus = OfferStatus.Active,
+                    SellerPublicKeyBytes = sender.Bytes,
+                    Metadata = ""
+                });
+                await dbContext.SaveChangesAsync();
+            };
         }
     }
 }

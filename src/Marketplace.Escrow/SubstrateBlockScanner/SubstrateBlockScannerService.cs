@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Polkadot.Api;
+using Polkadot.DataStructs;
 
 namespace Marketplace.Escrow.SubstrateScanner
 {
@@ -19,17 +20,19 @@ namespace Marketplace.Escrow.SubstrateScanner
         private readonly ILogger _logger;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly string _nodeEndpoint;
+        private readonly PublicKey _matcherContract;
         private readonly TaskCompletionSource<int> _executionCompletionSource = new();
         private readonly Channel<ulong> _blocksChannel = Channel.CreateUnbounded<ulong>();
         private ulong _lastScheduledBlock = 0;
         private ulong _lastProcessedBlock = 0;
         private object _blockSchedulerLock = new object();
 
-        protected SubstrateBlockScannerService(ILogger logger, IServiceScopeFactory scopeFactory, string nodeEndpoint)
+        protected SubstrateBlockScannerService(ILogger logger, IServiceScopeFactory scopeFactory, string nodeEndpoint, PublicKey matcherContract)
         {
             _logger = logger;
             _scopeFactory = scopeFactory;
             _nodeEndpoint = nodeEndpoint;
+            _matcherContract = matcherContract;
         }
         
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -157,7 +160,7 @@ namespace Marketplace.Escrow.SubstrateScanner
                 }
 
                 Resubscribe();
-            }, _logger);
+            }, _logger, _matcherContract);
             application?.Application?.Connect(_nodeEndpoint);
 
             

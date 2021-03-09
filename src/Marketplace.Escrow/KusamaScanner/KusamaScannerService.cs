@@ -32,18 +32,18 @@ namespace Marketplace.Escrow.KusamaScanner
         private readonly Configuration _configuration;
         private PublicKey _marketplacePublicKey;
 
-        public KusamaBlockScannerService(IServiceScopeFactory scopeFactory, ILogger<KusamaBlockScannerService> logger, Configuration configuration): base(scopeFactory, logger, configuration.KusamaEndpoint, IsolationLevel.RepeatableRead)
+        public KusamaBlockScannerService(IServiceScopeFactory scopeFactory, ILogger<KusamaBlockScannerService> logger, Configuration configuration): base(scopeFactory, logger, configuration.KusamaEndpoint, IsolationLevel.RepeatableRead, configuration.MatcherContractPublicKey)
         {
             _logger = logger;
             _configuration = configuration;
             _marketplacePublicKey = configuration.MarketplaceKusamaPublicKey;
         }
 
-        protected override IEnumerable<Func<MarketplaceDbContext, Task>> ProcessExtrinsics(IEnumerable<DeserializedExtrinsic> extrinsics, ulong blockNumber, CancellationToken stoppingToken)
+        protected override IEnumerable<ExtrinsicHandler> ProcessExtrinsics(IEnumerable<DeserializedExtrinsic> extrinsics, ulong blockNumber, CancellationToken stoppingToken)
         {
             foreach (var extrinsic in extrinsics)
             {
-                Func<MarketplaceDbContext, Task>? handler = extrinsic.Extrinsic.Call.Call switch
+                Func<MarketplaceDbContext, ValueTask>? handler = extrinsic.Extrinsic.Call.Call switch
                 {
                     Polkadot.BinaryContracts.Calls.Balances.TransferCall {Dest: var dest, Value: var value} => HandleTransfer(extrinsic, dest, value, blockNumber, stoppingToken),
                     Polkadot.BinaryContracts.Calls.Balances.TransferKeepAliveCall {Dest: var dest, Value: var value} => HandleTransfer(extrinsic, dest, value, blockNumber, stoppingToken),
@@ -53,12 +53,15 @@ namespace Marketplace.Escrow.KusamaScanner
 
                 if (handler != null)
                 {
-                    yield return handler;
+                    yield return new ExtrinsicHandler()
+                    {
+                        OnSaveToDb = handler,
+                    };
                 }
             }
         }
 
-        private Func<MarketplaceDbContext, Task>? HandleTransfer(DeserializedExtrinsic extrinsic, PublicKey dest, BigInteger value, ulong blockNumber, CancellationToken cancellationToken)
+        private Func<MarketplaceDbContext, ValueTask>? HandleTransfer(DeserializedExtrinsic extrinsic, PublicKey dest, BigInteger value, ulong blockNumber, CancellationToken cancellationToken)
         {
             if (!dest.Bytes.SequenceEqual(_marketplacePublicKey.Bytes))
             {

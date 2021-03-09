@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Marketplace.Db;
+using Marketplace.Escrow.EventBus;
 using Marketplace.Escrow.KusamaScanner;
 using Marketplace.Escrow.RegisterNftDeposit;
 using Marketplace.Escrow.UniqueScanner;
@@ -35,10 +36,11 @@ namespace Marketplace.Escrow
                     hostContext.Configuration.Bind(configuration);
                     services.AddOptions<Configuration>();
                     services.AddDbModule(configuration);
-                    services.AddHostedService<KusamaBlockScannerService>();
+                    //services.AddHostedService<KusamaBlockScannerService>();
                     services.AddHostedService<UniqueBlockScannerService>();
                     services.AddHostedService<RegisterNftDepositService>();
                     services.AddSingleton(configuration);
+                    services.AddSingleton<IEventBusService, EventBusService>();
                 })
                 .ConfigureLogging((hostingContext, logging) =>
                 {

@@ -24,6 +24,12 @@ namespace Marketplace.Db.Models
         
         [Required]
         public string Seller { get; set; } = null!;
+
+        public byte[] SellerPublicKeyBytes
+        {
+            get => Convert.FromBase64String(Seller);
+            set => Seller = Convert.ToBase64String(value);
+        }
         
         [Required]
         public string Metadata { get; set; } = null!;
