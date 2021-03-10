@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Marketplace.Db.Models
 {
     [Index(nameof(AccountPublicKey))]
-    public class KusamaTransaction : IDataToProcess
+    public class KusamaIncomeTransaction : IDataToProcess
     {
         [Key]
         public Guid Id { get; set; }
@@ -28,7 +28,6 @@ namespace Marketplace.Db.Models
             set => AccountPublicKey = Convert.ToBase64String(value);
         }
 
-        [ForeignKey(nameof(Block))]
         public ulong? BlockId { get; set; }
 
         public ProcessingDataStatus Status { get; set; }
@@ -38,20 +37,18 @@ namespace Marketplace.Db.Models
 
         public string? ErrorMessage { get; set; }
 
-        public virtual KusamaProcessedBlock Block { get; set; } = null!;
-
         /// <summary>
         /// Someone sent kusama to marketplace.
         /// </summary>
         /// <returns></returns>
-        public static KusamaTransaction Income(BigInteger amount, byte[] accountPublicKey, ulong blockId)
+        public static KusamaIncomeTransaction Income(BigInteger amount, byte[] accountPublicKey, ulong blockId)
         {
             if (amount <= 0)
             {
                 throw new Exception("Negative income.");
             }
 
-            return new KusamaTransaction()
+            return new KusamaIncomeTransaction()
             {
                 Amount = amount,
                 Id = Guid.NewGuid(),

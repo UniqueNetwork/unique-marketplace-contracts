@@ -12,9 +12,10 @@ namespace Marketplace.Db
         public DbSet<Offer> Offers { get; set; } = null!;
         public DbSet<Trade> Trades { get; set; } = null!;
         public DbSet<KusamaProcessedBlock> KusamaProcessedBlocks { get; set; } = null!;
-        public DbSet<KusamaTransaction> KusamaTransactions { get; set; } = null!;
+        public DbSet<KusamaIncomeTransaction> KusamaIncomeTransactions { get; set; } = null!;
         public DbSet<UniqueProcessedBlock> UniqueProcessedBlocks { get; set; } = null!;
         public DbSet<NftIncomeTransaction> NftIncomeTransactions { get; set; } = null!;
+        public DbSet<KusamaOutgoingTransaction> KusamaOutgoingTransactions { get; set; } = null!;
 
         public MarketplaceDbContext(DbContextOptions options) : base(options)
         {
@@ -32,19 +33,27 @@ namespace Marketplace.Db
                 .Property(e => e.Price)
                 .HasConversion(bigIntegerConverter);
 
-            modelBuilder.Entity<KusamaTransaction>()
+            modelBuilder.Entity<NftIncomeTransaction>()
+                .HasIndex("Status", "LockTime")
+                .HasFilter($"\"Status\" = 0");
+
+            modelBuilder.Entity<NftIncomeTransaction>()
+                .Property(e => e.Value)
+                .HasConversion(bigIntegerConverter);
+
+            modelBuilder.Entity<KusamaIncomeTransaction>()
+                .HasIndex("Status", "LockTime")
+                .HasFilter($"\"Status\" = 0");
+
+            modelBuilder.Entity<KusamaIncomeTransaction>()
                 .Property(e => e.Amount)
                 .HasConversion(bigIntegerConverter);
 
-            modelBuilder.Entity<NftIncomeTransaction>()
-                .HasIndex("Status", "LockTime")
+            modelBuilder.Entity<KusamaOutgoingTransaction>()
+                .HasIndex("Status")
                 .HasFilter($"\"Status\" = 0");
 
-            modelBuilder.Entity<KusamaTransaction>()
-                .HasIndex("Status", "LockTime")
-                .HasFilter($"\"Status\" = 0");
-                
-            modelBuilder.Entity<NftIncomeTransaction>()
+            modelBuilder.Entity<KusamaOutgoingTransaction>()
                 .Property(e => e.Value)
                 .HasConversion(bigIntegerConverter);
         }
