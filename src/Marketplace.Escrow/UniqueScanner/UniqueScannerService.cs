@@ -61,7 +61,7 @@ namespace Marketplace.Escrow.UniqueScanner
             {
                 await dbContext.NftIncomeTransactions.AddAsync(new NftIncomeTransaction()
                 {
-                    Deposited = false,
+                    Status = ProcessingDataStatus.InProgress,
                     Id = Guid.NewGuid(),
                     CollectionId = transferCall.CollectionId,
                     TokenId = transferCall.ItemId,

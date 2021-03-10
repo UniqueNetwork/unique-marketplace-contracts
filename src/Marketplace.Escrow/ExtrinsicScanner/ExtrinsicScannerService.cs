@@ -49,7 +49,7 @@ namespace Marketplace.Escrow.TransactionScanner
                 _application = SafeApplication.CreateApplication(ex =>
                 {
                     _logger.LogError(ex, "{ServiceName} listener failed", GetType().FullName);
-                    Interlocked.Exchange(ref myTask, null)?.SetException(ex);
+                    Interlocked.Exchange<TaskCompletionSource<int>?>(ref myTask, null)?.SetException(ex);
 
                     _application?.Dispose();
                     _application = null;
@@ -61,18 +61,19 @@ namespace Marketplace.Escrow.TransactionScanner
             {
                 if (t.IsCanceled)
                 {
-                    Interlocked.Exchange(ref myTask, null)?.SetCanceled();
+                    // ReSharper disable once MethodSupportsCancellation
+                    Interlocked.Exchange<TaskCompletionSource<int>?>(ref myTask, null)?.SetCanceled();
                 }
 
                 if (t.IsFaulted)
                 {
                     _logger.LogError(t.Exception, "Extrinsic listener failed");
-                    Interlocked.Exchange(ref myTask, null)?.SetException(t.Exception!);
+                    Interlocked.Exchange<TaskCompletionSource<int>?>(ref myTask, null)?.SetException(t.Exception!);
                 }
 
                 if (t.IsCompletedSuccessfully)
                 {
-                    Interlocked.Exchange(ref myTask, null)?.SetResult(0);
+                    Interlocked.Exchange<TaskCompletionSource<int>?>(ref myTask, null)?.SetResult(0);
                 }
             });
             
@@ -84,8 +85,7 @@ namespace Marketplace.Escrow.TransactionScanner
             void OnHealthCheck()
             {
                 stoppingToken.ThrowIfCancellationRequested();
-                Interlocked.Exchange(ref _application, null)?.Dispose();
-                
+                _application.Dispose();
             }
             
             _application?.HealthCheck(TimeSpan.FromMinutes(1), OnHealthCheck);

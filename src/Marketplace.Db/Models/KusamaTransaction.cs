@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Marketplace.Db.Models
 {
     [Index(nameof(AccountPublicKey))]
-    public class KusamaTransaction
+    public class KusamaTransaction : IDataToProcess
     {
         [Key]
         public Guid Id { get; set; }
@@ -30,6 +30,13 @@ namespace Marketplace.Db.Models
 
         [ForeignKey(nameof(Block))]
         public ulong? BlockId { get; set; }
+
+        public ProcessingDataStatus Status { get; set; }
+        
+        [ConcurrencyCheck]
+        public DateTime? LockTime { get; set; }
+
+        public string? ErrorMessage { get; set; }
 
         public virtual KusamaProcessedBlock Block { get; set; } = null!;
 

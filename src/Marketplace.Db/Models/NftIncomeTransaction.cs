@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Marketplace.Db.Models
 {
-    public class NftIncomeTransaction
+    public class NftIncomeTransaction : IDataToProcess
     {
         [Key]
         public Guid Id { get; set; }
@@ -15,18 +15,17 @@ namespace Marketplace.Db.Models
         
         public uint TokenId { get; set; }
         
-        /// <summary>
-        /// True if matcher deposit was called.
-        /// </summary>
-        public bool Deposited { get; set; }
-        
         public BigInteger Value { get; set; } 
 
         [Required]
         public string OwnerPublicKey { get; set; } = null!;
-        
+
+        public ProcessingDataStatus Status { get; set; }
+
         [ConcurrencyCheck]
         public DateTime? LockTime { get; set; }
+
+        public string? ErrorMessage { get; set; }
 
         [NotMapped]
         public byte[] OwnerPublicKeyBytes

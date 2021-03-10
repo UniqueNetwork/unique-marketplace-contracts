@@ -37,8 +37,12 @@ namespace Marketplace.Db
                 .HasConversion(bigIntegerConverter);
 
             modelBuilder.Entity<NftIncomeTransaction>()
-                .HasIndex("Deposited", "LockTime")
-                .HasFilter($"\"Deposited\" is not true");
+                .HasIndex("Status", "LockTime")
+                .HasFilter($"\"Status\" = 0");
+
+            modelBuilder.Entity<KusamaTransaction>()
+                .HasIndex("Status", "LockTime")
+                .HasFilter($"\"Status\" = 0");
                 
             modelBuilder.Entity<NftIncomeTransaction>()
                 .Property(e => e.Value)
