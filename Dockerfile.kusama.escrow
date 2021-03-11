@@ -5,6 +5,5 @@ WORKDIR /src
 COPY src/Marketplace.Escrow.JS .
 
 RUN npm install
-RUN npm run build
 
 CMD ["node", "kusama_vault.js"]
