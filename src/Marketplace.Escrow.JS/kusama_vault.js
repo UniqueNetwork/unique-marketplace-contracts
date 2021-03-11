@@ -244,15 +244,14 @@ async function handleKusama() {
 
   // Work indefinitely
   while (true) {
-
-    // Get the last processed block
-    let lastKusamaBlock = await getLastHandledKusamaBlock();
-
-    // Catch up with blocks
+    // 1. Catch up with blocks
     const finalizedHash = await api.rpc.chain.getFinalizedHead();
     const signedFinalizedBlock = await api.rpc.chain.getBlock(finalizedHash);
     while (true) {
       try {
+        // Get the last processed block
+        let lastKusamaBlock = await getLastHandledKusamaBlock();
+
         if (lastKusamaBlock + 1 <= signedFinalizedBlock.block.header.number) {
           lastKusamaBlock++;
 
@@ -267,7 +266,7 @@ async function handleKusama() {
       }
     }
 
-    // Handle queued withdrawals
+    // 2. Handle queued withdrawals
     let withdrawal = false;
     do {
       withdrawal = false;
