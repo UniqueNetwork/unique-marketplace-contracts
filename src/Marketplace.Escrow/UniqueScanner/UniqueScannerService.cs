@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using Marketplace.Db;
@@ -9,6 +10,7 @@ using Marketplace.Db.Models;
 using Marketplace.Escrow.EventBus;
 using Marketplace.Escrow.MatcherContract.Calls;
 using Marketplace.Escrow.TransactionScanner;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polkadot.BinaryContracts.Calls.Contracts;
@@ -82,7 +84,47 @@ namespace Marketplace.Escrow.UniqueScanner
             return callCall.Parameters switch
             {
                 AskParameter a => HandleAsk(a, sender),
+                BuyParameter b => HandleBuy(b, sender),
                 _ => null
+            };
+        }
+
+        private Func<MarketplaceDbContext, ValueTask>? HandleBuy(BuyParameter buyParameter, PublicKey sender)
+        {
+            return async dbContext =>
+            {
+                var offer = await dbContext.Offers.FirstAsync(o =>
+                    buyParameter.CollectionId == o.CollectionId && buyParameter.TokenId == o.TokenId && o.OfferStatus == OfferStatus.Active);
+                offer.OfferStatus = OfferStatus.Traded;
+
+                await dbContext.Trades.AddAsync(new Trade()
+                {
+                    BuyerPublicKey = sender.Bytes,
+                    Id = Guid.NewGuid(),
+                    Offer = offer,
+                    TradeDate = DateTime.UtcNow,
+                });
+
+                await dbContext.KusamaOutgoingTransactions.AddAsync(new QuoteOutgoingTransaction()
+                {
+                    Id = Guid.NewGuid(),
+                    Status = ProcessingDataStatus.InProgress,
+                    Value = offer.Price,
+                    QuoteId = offer.QuoteId,
+                    RecipientPublicKeyBytes = offer.SellerPublicKeyBytes
+                });
+
+                await dbContext.NftOutgoingTransactions.AddAsync(new NftOutgoingTransaction()
+                {
+                    Id = Guid.NewGuid(),
+                    Status = ProcessingDataStatus.InProgress,
+                    Value = BigInteger.Zero,
+                    CollectionId = offer.CollectionId,
+                    TokenId = offer.TokenId,
+                    RecipientPublicKeyBytes = sender.Bytes,
+                });
+
+                await dbContext.SaveChangesAsync();
             };
         }
 
@@ -99,7 +141,7 @@ namespace Marketplace.Escrow.UniqueScanner
                     CreationDate = DateTime.UtcNow,
                     OfferStatus = OfferStatus.Active,
                     SellerPublicKeyBytes = sender.Bytes,
-                    Metadata = ""
+                    Metadata = "",
                 });
                 await dbContext.SaveChangesAsync();
             };

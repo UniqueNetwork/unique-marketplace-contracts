@@ -16,12 +16,12 @@ using Polkadot.Utils;
 
 namespace Marketplace.Escrow.RegisterKusamaDeposit
 {
-    public class RegisterKusamaDepositService : CallSubstrateDataProcessingService<KusamaIncomeTransaction>
+    public class RegisterQuoteDepositService : CallSubstrateDataProcessingService<QuoteIncomeTransaction>
     {
         private readonly ILogger _logger;
         private readonly Configuration _configuration;
 
-        public RegisterKusamaDepositService(IServiceScopeFactory scopeFactory, ILogger<RegisterKusamaDepositService> logger, Configuration configuration) : base(scopeFactory, logger)
+        public RegisterQuoteDepositService(IServiceScopeFactory scopeFactory, ILogger<RegisterQuoteDepositService> logger, Configuration configuration) : base(scopeFactory, logger)
         {
             _logger = logger;
             _configuration = configuration;
@@ -56,7 +56,7 @@ namespace Marketplace.Escrow.RegisterKusamaDeposit
             }, stoppingToken);
         }
 
-        public override Task Process(KusamaIncomeTransaction kusamaIncome)
+        public override Task Process(QuoteIncomeTransaction quoteIncome)
         {
             return this.CallSubstrate(_logger,
                 _configuration.MatcherContractPublicKey, 
@@ -65,9 +65,9 @@ namespace Marketplace.Escrow.RegisterKusamaDeposit
                 _configuration.MarketplacePrivateKeyBytes,
                 app => this.ContractCall(app, () => new RegisterDepositParameter()
                 {
-                    User = new PublicKey() {Bytes = kusamaIncome.AccountPublicKeyBytes},
-                    DepositBalance = new Balance() {Value = kusamaIncome.Amount},
-                    QuoteId = kusamaIncome.QuoteId
+                    User = new PublicKey() {Bytes = quoteIncome.AccountPublicKeyBytes},
+                    DepositBalance = new Balance() {Value = quoteIncome.Amount},
+                    QuoteId = quoteIncome.QuoteId
                 }));
         }
     }

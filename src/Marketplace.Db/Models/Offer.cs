@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Marketplace.Db.Models
 {
-    [Index(nameof(CollectionId))]
+    [Index(nameof(OfferStatus), nameof(CollectionId), nameof(TokenId))]
     [Index(nameof(CreationDate))]
     public class Offer
     {
@@ -21,6 +21,8 @@ namespace Marketplace.Db.Models
         public ulong TokenId { get; set; }
         
         public BigInteger Price { get; set; }
+        
+        public ulong QuoteId { get; set; }
         
         [Required]
         public string Seller { get; set; } = null!;

@@ -40,7 +40,7 @@ namespace Marketplace.Escrow
                     //services.AddHostedService<KusamaBlockScannerService>();
                     services.AddHostedService<UniqueBlockScannerService>();
                     services.AddHostedService<RegisterNftDepositService>();
-                    services.AddHostedService<RegisterKusamaDepositService>();
+                    services.AddHostedService<RegisterQuoteDepositService>();
                     services.AddSingleton(configuration);
                     services.AddSingleton<IEventBusService, EventBusService>();
                 })

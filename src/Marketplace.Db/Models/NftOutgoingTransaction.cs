@@ -5,22 +5,20 @@ using System.Numerics;
 
 namespace Marketplace.Db.Models
 {
-    public class KusamaOutgoingTransaction
+    public class NftOutgoingTransaction : IDataToProcess
     {
         [Key]
         public Guid Id { get; set; }
         
-        public ProcessingDataStatus Status { get; set; }
-
-        public string? ErrorMessage { get; set; }
+        public ulong CollectionId { get; set; }
         
-        public BigInteger Value { get; set; }
+        public ulong TokenId { get; set; }
         
-        public ulong QuoteId { get; set; }
+        public BigInteger Value { get; set; } 
 
         [Required]
         public string RecipientPublicKey { get; set; } = null!;
-        
+
         [NotMapped]
         public byte[] RecipientPublicKeyBytes
         {
@@ -28,5 +26,11 @@ namespace Marketplace.Db.Models
             set => RecipientPublicKey = Convert.ToBase64String(value);
         }
 
+        public ProcessingDataStatus Status { get; set; }
+
+        [ConcurrencyCheck]
+        public DateTime? LockTime { get; set; }
+
+        public string? ErrorMessage { get; set; }
     }
 }

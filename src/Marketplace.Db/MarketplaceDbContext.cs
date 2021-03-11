@@ -12,10 +12,11 @@ namespace Marketplace.Db
         public DbSet<Offer> Offers { get; set; } = null!;
         public DbSet<Trade> Trades { get; set; } = null!;
         public DbSet<KusamaProcessedBlock> KusamaProcessedBlocks { get; set; } = null!;
-        public DbSet<KusamaIncomeTransaction> KusamaIncomeTransactions { get; set; } = null!;
+        public DbSet<QuoteIncomeTransaction> QuoteIncomeTransactions { get; set; } = null!;
         public DbSet<UniqueProcessedBlock> UniqueProcessedBlocks { get; set; } = null!;
         public DbSet<NftIncomeTransaction> NftIncomeTransactions { get; set; } = null!;
-        public DbSet<KusamaOutgoingTransaction> KusamaOutgoingTransactions { get; set; } = null!;
+        public DbSet<NftOutgoingTransaction> NftOutgoingTransactions { get; set; } = null!;
+        public DbSet<QuoteOutgoingTransaction> KusamaOutgoingTransactions { get; set; } = null!;
 
         public MarketplaceDbContext(DbContextOptions options) : base(options)
         {
@@ -41,21 +42,29 @@ namespace Marketplace.Db
                 .Property(e => e.Value)
                 .HasConversion(bigIntegerConverter);
 
-            modelBuilder.Entity<KusamaIncomeTransaction>()
+            modelBuilder.Entity<QuoteIncomeTransaction>()
                 .HasIndex("Status", "LockTime")
                 .HasFilter($"\"Status\" = 0");
 
-            modelBuilder.Entity<KusamaIncomeTransaction>()
+            modelBuilder.Entity<QuoteIncomeTransaction>()
                 .Property(e => e.Amount)
                 .HasConversion(bigIntegerConverter);
 
-            modelBuilder.Entity<KusamaOutgoingTransaction>()
+            modelBuilder.Entity<QuoteOutgoingTransaction>()
                 .HasIndex("Status")
                 .HasFilter($"\"Status\" = 0");
 
-            modelBuilder.Entity<KusamaOutgoingTransaction>()
+            modelBuilder.Entity<QuoteOutgoingTransaction>()
                 .Property(e => e.Value)
                 .HasConversion(bigIntegerConverter);
+
+            modelBuilder.Entity<NftOutgoingTransaction>()
+                .Property(e => e.Value)
+                .HasConversion(bigIntegerConverter);
+
+            modelBuilder.Entity<NftOutgoingTransaction>()
+                .HasIndex("Status", "LockTime")
+                .HasFilter($"\"Status\" = 0");
         }
     }
 }

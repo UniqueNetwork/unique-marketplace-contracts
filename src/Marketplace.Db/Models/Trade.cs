@@ -15,6 +15,13 @@ namespace Marketplace.Db.Models
         [Required]
         public string Buyer { get; set; } = null!;
 
+        [NotMapped]
+        public byte[] BuyerPublicKey
+        {
+            get => Convert.FromBase64String(Buyer);
+            set => Buyer = Convert.ToBase64String(value);
+        }
+
         [ForeignKey(nameof(Offer))]
         public Guid OfferId { get; set; }
         
