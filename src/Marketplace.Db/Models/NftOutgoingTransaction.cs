@@ -5,6 +5,7 @@ using System.Numerics;
 
 namespace Marketplace.Db.Models
 {
+    [Table("NftOutgoingTransaction")]
     public class NftOutgoingTransaction : IDataToProcess
     {
         [Key]

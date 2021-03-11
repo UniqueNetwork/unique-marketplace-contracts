@@ -7,7 +7,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Marketplace.Db.Models
 {
     [Index(nameof(AccountPublicKey))]
-    public class QuoteIncomeTransaction : IDataToProcess
+    [Table("QuoteIncomingTransaction")]
+    public class QuoteIncomingTransaction : IDataToProcess
     {
         [Key]
         public Guid Id { get; set; }
@@ -43,14 +44,14 @@ namespace Marketplace.Db.Models
         /// Someone sent kusama to marketplace.
         /// </summary>
         /// <returns></returns>
-        public static QuoteIncomeTransaction Income(BigInteger amount, byte[] accountPublicKey, ulong blockId)
+        public static QuoteIncomingTransaction Incoming(BigInteger amount, byte[] accountPublicKey, ulong blockId)
         {
             if (amount <= 0)
             {
                 throw new Exception("Negative income.");
             }
 
-            return new QuoteIncomeTransaction()
+            return new QuoteIncomingTransaction()
             {
                 Amount = amount,
                 Id = Guid.NewGuid(),

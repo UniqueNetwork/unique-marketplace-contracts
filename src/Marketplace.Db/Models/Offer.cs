@@ -9,6 +9,7 @@ namespace Marketplace.Db.Models
 {
     [Index(nameof(OfferStatus), nameof(CollectionId), nameof(TokenId))]
     [Index(nameof(CreationDate))]
+    [Table("Offer")]
     public class Offer
     {
         [Key]

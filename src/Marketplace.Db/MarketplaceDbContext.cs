@@ -12,11 +12,11 @@ namespace Marketplace.Db
         public DbSet<Offer> Offers { get; set; } = null!;
         public DbSet<Trade> Trades { get; set; } = null!;
         public DbSet<KusamaProcessedBlock> KusamaProcessedBlocks { get; set; } = null!;
-        public DbSet<QuoteIncomeTransaction> QuoteIncomeTransactions { get; set; } = null!;
+        public DbSet<QuoteIncomingTransaction> QuoteIncomingTransactions { get; set; } = null!;
         public DbSet<UniqueProcessedBlock> UniqueProcessedBlocks { get; set; } = null!;
-        public DbSet<NftIncomeTransaction> NftIncomeTransactions { get; set; } = null!;
+        public DbSet<NftIncomingTransaction> NftIncomingTransactions { get; set; } = null!;
         public DbSet<NftOutgoingTransaction> NftOutgoingTransactions { get; set; } = null!;
-        public DbSet<QuoteOutgoingTransaction> KusamaOutgoingTransactions { get; set; } = null!;
+        public DbSet<QuoteOutgoingTransaction> QuoteOutgoingTransactions { get; set; } = null!;
 
         public MarketplaceDbContext(DbContextOptions options) : base(options)
         {
@@ -34,19 +34,19 @@ namespace Marketplace.Db
                 .Property(e => e.Price)
                 .HasConversion(bigIntegerConverter);
 
-            modelBuilder.Entity<NftIncomeTransaction>()
+            modelBuilder.Entity<NftIncomingTransaction>()
                 .HasIndex("Status", "LockTime")
                 .HasFilter($"\"Status\" = 0");
 
-            modelBuilder.Entity<NftIncomeTransaction>()
+            modelBuilder.Entity<NftIncomingTransaction>()
                 .Property(e => e.Value)
                 .HasConversion(bigIntegerConverter);
 
-            modelBuilder.Entity<QuoteIncomeTransaction>()
+            modelBuilder.Entity<QuoteIncomingTransaction>()
                 .HasIndex("Status", "LockTime")
                 .HasFilter($"\"Status\" = 0");
 
-            modelBuilder.Entity<QuoteIncomeTransaction>()
+            modelBuilder.Entity<QuoteIncomingTransaction>()
                 .Property(e => e.Amount)
                 .HasConversion(bigIntegerConverter);
 
