@@ -14,6 +14,7 @@ let dbClient = null;
 const incomingTxTable = "QuoteIncomingTransaction";
 const outgoingTxTable = "QuoteOutgoingTransaction";
 const kusamaBlocksTable = "KusamaProcessedBlock";
+let adminAddress;
 
 function getTime() {
   var a = new Date();
@@ -157,7 +158,7 @@ async function scanKusamaBlock(api, blockNum) {
   await signedBlock.block.extrinsics.forEach(async (ex, index) => {
     let { _isSigned, _meta, method: { args, method, section } } = ex;
     if (method == "transferKeepAlive") method = "transfer";
-    if ((section == "balances") && (method == "transfer") && (args[0] == config.adminAddress)) {
+    if ((section == "balances") && (method == "transfer") && (args[0] == adminAddress)) {
       const events = allRecords
         .filter(({ phase }) =>
           phase.isApplyExtrinsic &&
@@ -238,6 +239,7 @@ async function handleKusama() {
   const api = await getKusamaConnection();
   const keyring = new Keyring({ type: 'sr25519' });
   const admin = keyring.addFromUri(config.adminSeed);
+  adminAddress = admin.address.toString();
 
   // Work indefinitely
   while (true) {
