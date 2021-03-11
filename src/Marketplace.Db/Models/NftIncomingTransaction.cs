@@ -6,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Marketplace.Db.Models
 {
-    public class NftIncomeTransaction : IDataToProcess
+    [Table("NftIncomingTransaction")]
+    public class NftIncomingTransaction : IDataToProcess
     {
         [Key]
         public Guid Id { get; set; }

@@ -3,20 +3,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Marketplace.Db.Models;
 using Marketplace.Escrow.ContractCallDataProcessing;
-using Marketplace.Escrow.DataProcessing;
 using Marketplace.Escrow.Extensions;
 using Marketplace.Escrow.MatcherContract.Calls;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Polkadot.Api;
 using Polkadot.BinaryContracts;
-using Polkadot.BinaryContracts.Calls.Contracts;
 using Polkadot.DataStructs;
-using Polkadot.Utils;
 
-namespace Marketplace.Escrow.RegisterKusamaDeposit
+namespace Marketplace.Escrow.RegisterQuoteDeposit
 {
-    public class RegisterQuoteDepositService : CallSubstrateDataProcessingService<QuoteIncomeTransaction>
+    public class RegisterQuoteDepositService : CallSubstrateDataProcessingService<QuoteIncomingTransaction>
     {
         private readonly ILogger _logger;
         private readonly Configuration _configuration;
@@ -56,7 +52,7 @@ namespace Marketplace.Escrow.RegisterKusamaDeposit
             }, stoppingToken);
         }
 
-        public override Task Process(QuoteIncomeTransaction quoteIncome)
+        public override Task Process(QuoteIncomingTransaction quoteIncoming)
         {
             return this.CallSubstrate(_logger,
                 _configuration.MatcherContractPublicKey, 
@@ -65,9 +61,9 @@ namespace Marketplace.Escrow.RegisterKusamaDeposit
                 _configuration.MarketplacePrivateKeyBytes,
                 app => this.ContractCall(app, () => new RegisterDepositParameter()
                 {
-                    User = new PublicKey() {Bytes = quoteIncome.AccountPublicKeyBytes},
-                    DepositBalance = new Balance() {Value = quoteIncome.Amount},
-                    QuoteId = quoteIncome.QuoteId
+                    User = new PublicKey() {Bytes = quoteIncoming.AccountPublicKeyBytes},
+                    DepositBalance = new Balance() {Value = quoteIncoming.Amount},
+                    QuoteId = quoteIncoming.QuoteId
                 }));
         }
     }

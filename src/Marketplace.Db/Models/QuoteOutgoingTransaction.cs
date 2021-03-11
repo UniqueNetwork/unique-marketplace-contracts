@@ -5,6 +5,7 @@ using System.Numerics;
 
 namespace Marketplace.Db.Models
 {
+    [Table("QuoteOutgoingTransaction")]
     public class QuoteOutgoingTransaction
     {
         [Key]

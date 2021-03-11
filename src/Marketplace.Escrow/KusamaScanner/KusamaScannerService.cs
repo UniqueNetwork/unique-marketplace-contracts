@@ -72,8 +72,8 @@ namespace Marketplace.Escrow.KusamaScanner
             _logger.LogInformation("Recieved {Amount} kusama from {PublicKey}", value, sender);
             return async dbContext =>
             {
-                var income = QuoteIncomeTransaction.Income(value, sender.Bytes, blockNumber);
-                await dbContext.QuoteIncomeTransactions.AddAsync(income, cancellationToken);
+                var income = QuoteIncomingTransaction.Incoming(value, sender.Bytes, blockNumber);
+                await dbContext.QuoteIncomingTransactions.AddAsync(income, cancellationToken);
             };
         }
 

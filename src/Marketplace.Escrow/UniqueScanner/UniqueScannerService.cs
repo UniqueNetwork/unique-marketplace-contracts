@@ -61,7 +61,7 @@ namespace Marketplace.Escrow.UniqueScanner
 
             return async dbContext =>
             {
-                await dbContext.NftIncomeTransactions.AddAsync(new NftIncomeTransaction()
+                await dbContext.NftIncomingTransactions.AddAsync(new NftIncomingTransaction()
                 {
                     Status = ProcessingDataStatus.InProgress,
                     Id = Guid.NewGuid(),
@@ -105,7 +105,7 @@ namespace Marketplace.Escrow.UniqueScanner
                     TradeDate = DateTime.UtcNow,
                 });
 
-                await dbContext.KusamaOutgoingTransactions.AddAsync(new QuoteOutgoingTransaction()
+                await dbContext.QuoteOutgoingTransactions.AddAsync(new QuoteOutgoingTransaction()
                 {
                     Id = Guid.NewGuid(),
                     Status = ProcessingDataStatus.InProgress,

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Marketplace.Db.Models
 {
+    [Table("Trade")]
     public class Trade
     {
         [Key]

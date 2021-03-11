@@ -14,7 +14,7 @@ using Polkadot.DataStructs;
 
 namespace Marketplace.Escrow.RegisterNftDeposit
 {
-    public class RegisterNftDepositService : DataProcessingService<NftIncomeTransaction>
+    public class RegisterNftDepositService : DataProcessingService<NftIncomingTransaction>
     {
         private readonly IEventBusService _eventBusService;
         private readonly ILogger<RegisterNftDepositService> _logger;
@@ -48,7 +48,7 @@ namespace Marketplace.Escrow.RegisterNftDeposit
             }, stoppingToken);
         }
 
-        public override Task Process(NftIncomeTransaction transaction)
+        public override Task Process(NftIncomingTransaction transaction)
         {
             return this.CallSubstrate(_logger,
                 _configuration.MatcherContractPublicKey, 

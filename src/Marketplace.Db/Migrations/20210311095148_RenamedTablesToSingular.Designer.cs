@@ -3,15 +3,17 @@ using System;
 using Marketplace.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Marketplace.Db.Migrations
 {
     [DbContext(typeof(MarketplaceDbContext))]
-    partial class MarketplaceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210311095148_RenamedTablesToSingular")]
+    partial class RenamedTablesToSingular
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,7 +35,7 @@ namespace Marketplace.Db.Migrations
                     b.ToTable("KusamaProcessedBlock");
                 });
 
-            modelBuilder.Entity("Marketplace.Db.Models.NftIncomingTransaction", b =>
+            modelBuilder.Entity("Marketplace.Db.Models.NftIncomeTransaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -73,7 +75,7 @@ namespace Marketplace.Db.Migrations
                     b.HasIndex("Status", "LockTime")
                         .HasFilter("\"Status\" = 0");
 
-                    b.ToTable("NftIncomingTransaction");
+                    b.ToTable("NftIncomeTransaction");
                 });
 
             modelBuilder.Entity("Marketplace.Db.Models.NftOutgoingTransaction", b =>
@@ -160,7 +162,7 @@ namespace Marketplace.Db.Migrations
                     b.ToTable("Offer");
                 });
 
-            modelBuilder.Entity("Marketplace.Db.Models.QuoteIncomingTransaction", b =>
+            modelBuilder.Entity("Marketplace.Db.Models.QuoteIncomeTransaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -201,7 +203,7 @@ namespace Marketplace.Db.Migrations
                     b.HasIndex("Status", "LockTime")
                         .HasFilter("\"Status\" = 0");
 
-                    b.ToTable("QuoteIncomingTransaction");
+                    b.ToTable("QuoteIncomeTransactions");
                 });
 
             modelBuilder.Entity("Marketplace.Db.Models.QuoteOutgoingTransaction", b =>
@@ -272,7 +274,7 @@ namespace Marketplace.Db.Migrations
                     b.ToTable("UniqueProcessedBlock");
                 });
 
-            modelBuilder.Entity("Marketplace.Db.Models.NftIncomingTransaction", b =>
+            modelBuilder.Entity("Marketplace.Db.Models.NftIncomeTransaction", b =>
                 {
                     b.HasOne("Marketplace.Db.Models.UniqueProcessedBlock", "UniqueProcessedBlock")
                         .WithMany()

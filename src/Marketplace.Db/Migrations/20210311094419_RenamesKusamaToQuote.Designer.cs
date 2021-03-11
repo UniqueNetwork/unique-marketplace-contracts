@@ -3,15 +3,17 @@ using System;
 using Marketplace.Db;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Marketplace.Db.Migrations
 {
     [DbContext(typeof(MarketplaceDbContext))]
-    partial class MarketplaceDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210311094419_RenamesKusamaToQuote")]
+    partial class RenamesKusamaToQuote
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,10 +32,10 @@ namespace Marketplace.Db.Migrations
 
                     b.HasKey("BlockNumber");
 
-                    b.ToTable("KusamaProcessedBlock");
+                    b.ToTable("KusamaProcessedBlocks");
                 });
 
-            modelBuilder.Entity("Marketplace.Db.Models.NftIncomingTransaction", b =>
+            modelBuilder.Entity("Marketplace.Db.Models.NftIncomeTransaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -73,7 +75,7 @@ namespace Marketplace.Db.Migrations
                     b.HasIndex("Status", "LockTime")
                         .HasFilter("\"Status\" = 0");
 
-                    b.ToTable("NftIncomingTransaction");
+                    b.ToTable("NftIncomeTransactions");
                 });
 
             modelBuilder.Entity("Marketplace.Db.Models.NftOutgoingTransaction", b =>
@@ -111,7 +113,7 @@ namespace Marketplace.Db.Migrations
                     b.HasIndex("Status", "LockTime")
                         .HasFilter("\"Status\" = 0");
 
-                    b.ToTable("NftOutgoingTransaction");
+                    b.ToTable("NftOutgoingTransactions");
                 });
 
             modelBuilder.Entity("Marketplace.Db.Models.Offer", b =>
@@ -157,10 +159,10 @@ namespace Marketplace.Db.Migrations
 
                     b.HasIndex("OfferStatus", "CollectionId", "TokenId");
 
-                    b.ToTable("Offer");
+                    b.ToTable("Offers");
                 });
 
-            modelBuilder.Entity("Marketplace.Db.Models.QuoteIncomingTransaction", b =>
+            modelBuilder.Entity("Marketplace.Db.Models.QuoteIncomeTransaction", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -201,7 +203,7 @@ namespace Marketplace.Db.Migrations
                     b.HasIndex("Status", "LockTime")
                         .HasFilter("\"Status\" = 0");
 
-                    b.ToTable("QuoteIncomingTransaction");
+                    b.ToTable("QuoteIncomeTransactions");
                 });
 
             modelBuilder.Entity("Marketplace.Db.Models.QuoteOutgoingTransaction", b =>
@@ -232,7 +234,7 @@ namespace Marketplace.Db.Migrations
                     b.HasIndex("Status")
                         .HasFilter("\"Status\" = 0");
 
-                    b.ToTable("QuoteOutgoingTransaction");
+                    b.ToTable("QuoteOutgoingTransactions");
                 });
 
             modelBuilder.Entity("Marketplace.Db.Models.Trade", b =>
@@ -255,7 +257,7 @@ namespace Marketplace.Db.Migrations
 
                     b.HasIndex("OfferId");
 
-                    b.ToTable("Trade");
+                    b.ToTable("Trades");
                 });
 
             modelBuilder.Entity("Marketplace.Db.Models.UniqueProcessedBlock", b =>
@@ -269,10 +271,10 @@ namespace Marketplace.Db.Migrations
 
                     b.HasKey("BlockNumber");
 
-                    b.ToTable("UniqueProcessedBlock");
+                    b.ToTable("UniqueProcessedBlocks");
                 });
 
-            modelBuilder.Entity("Marketplace.Db.Models.NftIncomingTransaction", b =>
+            modelBuilder.Entity("Marketplace.Db.Models.NftIncomeTransaction", b =>
                 {
                     b.HasOne("Marketplace.Db.Models.UniqueProcessedBlock", "UniqueProcessedBlock")
                         .WithMany()
