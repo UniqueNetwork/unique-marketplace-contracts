@@ -240,6 +240,7 @@ async function handleKusama() {
   const keyring = new Keyring({ type: 'sr25519' });
   const admin = keyring.addFromUri(config.adminSeed);
   adminAddress = admin.address.toString();
+  log(`Escrow admin address: ${adminAddress}`);
 
   // Work indefinitely
   while (true) {
