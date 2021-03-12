@@ -111,7 +111,8 @@ namespace Marketplace.Escrow.UniqueScanner
                     Status = ProcessingDataStatus.InProgress,
                     Value = offer.Price,
                     QuoteId = offer.QuoteId,
-                    RecipientPublicKeyBytes = offer.SellerPublicKeyBytes
+                    RecipientPublicKeyBytes = offer.SellerPublicKeyBytes,
+                    WithdrawType = WithdrawType.WithdrawMatched
                 });
 
                 await dbContext.NftOutgoingTransactions.AddAsync(new NftOutgoingTransaction()
