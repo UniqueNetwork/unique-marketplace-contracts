@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Marketplace.Db.Models;
-using Marketplace.Escrow.ContractCallDataProcessing;
+using Marketplace.Escrow.DataProcessing;
 using Marketplace.Escrow.Extensions;
 using Marketplace.Escrow.MatcherContract.Calls;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +12,7 @@ using Polkadot.DataStructs;
 
 namespace Marketplace.Escrow.RegisterQuoteDeposit
 {
-    public class RegisterQuoteDepositService : CallSubstrateDataProcessingService<QuoteIncomingTransaction>
+    public class RegisterQuoteDepositService : DataProcessingService<QuoteIncomingTransaction>
     {
         private readonly ILogger _logger;
         private readonly Configuration _configuration;
@@ -27,29 +27,6 @@ namespace Marketplace.Escrow.RegisterQuoteDeposit
         {
             RunInterval(stoppingToken);
             return Task.CompletedTask;
-        }
-
-        private void RunInterval(CancellationToken stoppingToken)
-        {
-            Task.Run(async () =>
-            {
-                if (stoppingToken.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                try
-                {
-                    await Run(stoppingToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "{ServiceName} failed", GetType().FullName);
-                }
-                
-                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
-                RunInterval(stoppingToken);
-            }, stoppingToken);
         }
 
         public override Task Process(QuoteIncomingTransaction quoteIncoming)
