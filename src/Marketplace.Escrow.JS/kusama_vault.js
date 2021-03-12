@@ -284,9 +284,7 @@ async function handleKusama() {
         withdrawal = true;
 
         try {
-
-          Тут нужно поле WithdrawType, которое добавит Сергей
-
+          // Handle withdrawals by type (withdraw or match )
           let withdrawType = ksmTx.withdrawType;
           let amountBN = new BigNumber(ksmTx.amount);
           let amountReturned = amountBN;
