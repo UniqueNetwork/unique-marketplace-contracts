@@ -36,7 +36,7 @@ namespace Marketplace.Escrow.TransferSoldNft
                 _configuration.UniqueEndpoint,
                 new Address(_configuration.MarketplaceUniqueAddress),
                 _configuration.MarketplacePrivateKeyBytes,
-                app => new TransferCall(recipient, (uint) outgoing.CollectionId, (uint) outgoing.TokenId, 0));
+                app => new TransferCall(recipient, (uint) outgoing.CollectionId, (uint) outgoing.TokenId, outgoing.Value));
         }
     }
 }
