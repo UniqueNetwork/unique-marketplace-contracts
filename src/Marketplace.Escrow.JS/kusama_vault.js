@@ -121,7 +121,8 @@ async function getOutgoingKusamaTransaction() {
   let ksmTx = {
     id: '',
     amount: '0',
-    recipient: null
+    recipient: null,
+    withdrawType: 0
   };
 
   if (res.rows.length > 0) {
@@ -133,9 +134,11 @@ async function getOutgoingKusamaTransaction() {
 
       // Convert public key into address
       const address = encodeAddress(hexToU8a(publicKey));
+      
       ksmTx.id = res.rows[0].Id;
       ksmTx.recipient = address;
       ksmTx.amount = res.rows[0].Value;
+      ksmTx.withdrawType = res.rows[0].WithdrawType;
     }
     catch (e) {
       setOutgoingKusamaTransactionStatus(res.rows[0].Id, 2, e.toString());
@@ -172,7 +175,13 @@ async function scanKusamaBlock(api, blockNum) {
         // Register Quote Deposit (save to DB)
         const amount = args[1];
         const address = ex.signer.toString();
-        await addIncomingKusamaTransaction(amount, address, blockNum);
+
+        // Apply 2% fee
+        let amountBN = new BigNumber(amount);
+        let fee = amountBN.dividedBy(51.001); // We received 102% of price, so the fee is 2/102 = 1/51 (+0.001 for rounding errors)
+        amountBN = amountBN.minus(fee).integerValue(BigNumber.ROUND_DOWN);
+
+        await addIncomingKusamaTransaction(amountBN.toString(), address, blockNum);
       }
       else {
         log(`Quote deposit from ${ex.signer.toString()} amount ${args[1]}`, "FAILED");
@@ -273,10 +282,24 @@ async function handleKusama() {
       const ksmTx = await getOutgoingKusamaTransaction();
       if (ksmTx.id.length > 0) {
         withdrawal = true;
-        log(`Quote withdraw: ${ksmTx.recipient.toString()} withdarwing amount ${ksmTx.amount}`, "START");
 
         try {
-          await sendTxAsync(api, admin, ksmTx.recipient, ksmTx.amount);
+
+          Тут нужно поле WithdrawType, которое добавит Сергей
+
+          let withdrawType = ksmTx.withdrawType;
+          let amountBN = new BigNumber(ksmTx.amount);
+          let amountReturned = amountBN;
+          if (withdrawType == 0) {
+            // Withdraw unused => return commission
+
+            // Add 2% fee to the returned amount less Kusama network fee of 0.003 KSM
+            const networkFee = 0.003;
+            amountReturned = amountBN.multipliedBy(51.001).dividedBy(50.001).minus(networkFee);
+          }
+          log(`Quote withdraw (${(withdrawType == 0)?"unused":"matched"}): ${ksmTx.recipient.toString()} withdarwing amount ${amountReturned.toString()}`, "START");
+
+          await sendTxAsync(api, admin, ksmTx.recipient, amountReturned.toString());
           await setOutgoingKusamaTransactionStatus(ksmTx.id, 1);
         }
         catch (e) {
