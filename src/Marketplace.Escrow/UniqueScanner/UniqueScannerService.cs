@@ -85,7 +85,44 @@ namespace Marketplace.Escrow.UniqueScanner
             {
                 AskParameter a => HandleAsk(a, sender),
                 BuyParameter b => HandleBuy(b, sender),
+                CancelParameter c => HandleCancel(c, sender),
+                WithdrawParameter w => HandleWithdraw(w, sender),
                 _ => null
+            };
+        }
+
+        private Func<MarketplaceDbContext, ValueTask>? HandleWithdraw(WithdrawParameter withdrawParameter, PublicKey sender)
+        {
+            return async dbContext =>
+            {
+                await dbContext.QuoteOutgoingTransactions.AddAsync(new QuoteOutgoingTransaction()
+                {
+                    Id = Guid.NewGuid(),
+                    Status = ProcessingDataStatus.InProgress,
+                    Value = withdrawParameter.WithdrawBalance.Value,
+                    QuoteId = withdrawParameter.QuoteId,
+                    WithdrawType = WithdrawType.WithdrawUnused,
+                    RecipientPublicKeyBytes = sender.Bytes
+                });
+
+                await dbContext.SaveChangesAsync();
+            };
+        }
+
+        private Func<MarketplaceDbContext, ValueTask>? HandleCancel(CancelParameter cancelParameter, PublicKey sender)
+        {
+            return async dbContext =>
+            {
+                await dbContext.NftOutgoingTransactions.AddAsync(new NftOutgoingTransaction()
+                {
+                    Id = Guid.NewGuid(),
+                    Status = ProcessingDataStatus.InProgress,
+                    Value = 0,
+                    CollectionId = cancelParameter.CollectionId,
+                    TokenId = cancelParameter.TokenId,
+                    RecipientPublicKeyBytes = sender.Bytes
+                });
+                await dbContext.SaveChangesAsync();
             };
         }
 
@@ -111,7 +148,8 @@ namespace Marketplace.Escrow.UniqueScanner
                     Status = ProcessingDataStatus.InProgress,
                     Value = offer.Price,
                     QuoteId = offer.QuoteId,
-                    RecipientPublicKeyBytes = offer.SellerPublicKeyBytes
+                    RecipientPublicKeyBytes = offer.SellerPublicKeyBytes,
+                    WithdrawType = WithdrawType.WithdrawMatched
                 });
 
                 await dbContext.NftOutgoingTransactions.AddAsync(new NftOutgoingTransaction()

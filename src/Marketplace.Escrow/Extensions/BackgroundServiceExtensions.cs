@@ -41,7 +41,7 @@ namespace Marketplace.Escrow.Extensions
                         application.Dispose();
                     });
                     var result =
-                        await application.Application.SignAndWaitForResult(from,
+                        await application.Application.SignWaitRetryOnLowPriority(from,
                             privateKey, call);
                     application.CancelHealthCheck();
                     result.Switch(_ =>

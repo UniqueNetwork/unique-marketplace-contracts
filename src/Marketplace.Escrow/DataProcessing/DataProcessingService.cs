@@ -198,5 +198,30 @@ namespace Marketplace.Escrow.DataProcessing
 
             return null;
         }
+        
+        
+        protected void RunInterval(CancellationToken stoppingToken)
+        {
+            Task.Run(async () =>
+            {
+                if (stoppingToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                try
+                {
+                    await Run(stoppingToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "{ServiceName} failed", GetType().FullName);
+                }
+                
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                RunInterval(stoppingToken);
+            }, stoppingToken);
+        }
+
     }
 }

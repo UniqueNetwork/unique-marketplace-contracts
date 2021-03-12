@@ -5,6 +5,7 @@ using Marketplace.Escrow.EventBus;
 using Marketplace.Escrow.KusamaScanner;
 using Marketplace.Escrow.RegisterNftDeposit;
 using Marketplace.Escrow.RegisterQuoteDeposit;
+using Marketplace.Escrow.TransferSoldNft;
 using Marketplace.Escrow.UniqueScanner;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -41,6 +42,7 @@ namespace Marketplace.Escrow
                     services.AddHostedService<UniqueBlockScannerService>();
                     services.AddHostedService<RegisterNftDepositService>();
                     services.AddHostedService<RegisterQuoteDepositService>();
+                    services.AddHostedService<TransferSoldNftService>();
                     services.AddSingleton(configuration);
                     services.AddSingleton<IEventBusService, EventBusService>();
                 })

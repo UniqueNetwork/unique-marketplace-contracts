@@ -22,6 +22,8 @@ namespace Marketplace.Db.Models
         [Required]
         public string RecipientPublicKey { get; set; } = null!;
         
+        public WithdrawType WithdrawType { get; set; }
+        
         [NotMapped]
         public byte[] RecipientPublicKeyBytes
         {
