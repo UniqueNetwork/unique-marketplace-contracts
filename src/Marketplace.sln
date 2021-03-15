@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Marketplace.Db", "Marketpla
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Marketplace.Escrow", "Marketplace.Escrow\Marketplace.Escrow.csproj", "{39255B2E-8950-4436-AC5E-67CF277C65C6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MnemonicSubstrate", "..\polkadot_api_dotnet\MnemonicSubstrate\MnemonicSubstrate.csproj", "{889CB9AC-49BE-47E7-AA85-03B40B898C60}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -44,10 +46,15 @@ Global
 		{39255B2E-8950-4436-AC5E-67CF277C65C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39255B2E-8950-4436-AC5E-67CF277C65C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39255B2E-8950-4436-AC5E-67CF277C65C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{889CB9AC-49BE-47E7-AA85-03B40B898C60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{889CB9AC-49BE-47E7-AA85-03B40B898C60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{889CB9AC-49BE-47E7-AA85-03B40B898C60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{889CB9AC-49BE-47E7-AA85-03B40B898C60}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{20312570-AB5E-4AD1-ADFB-F76B8D878968} = {56DB1CE6-4E3C-4062-8D16-1C383FC01330}
 		{4CA6F4C5-CEAD-4257-95A8-52E19B0D330A} = {56DB1CE6-4E3C-4062-8D16-1C383FC01330}
 		{9B625107-EDCB-4CEF-ABF0-BEF29B2BD4E7} = {56DB1CE6-4E3C-4062-8D16-1C383FC01330}
+		{889CB9AC-49BE-47E7-AA85-03B40B898C60} = {56DB1CE6-4E3C-4062-8D16-1C383FC01330}
 	EndGlobalSection
 EndGlobal

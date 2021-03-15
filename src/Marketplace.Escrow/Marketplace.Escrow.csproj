@@ -36,6 +36,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\polkadot_api_dotnet\MnemonicSubstrate\MnemonicSubstrate.csproj" />
       <ProjectReference Include="..\..\polkadot_api_dotnet\Polkadot\Polkadot.csproj" />
       <ProjectReference Include="..\Marketplace.Db\Marketplace.Db.csproj" />
     </ItemGroup>
