@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using Marketplace.Db;
 using Marketplace.Escrow.EventBus;
-using Marketplace.Escrow.KusamaScanner;
 using Marketplace.Escrow.RegisterNftDeposit;
 using Marketplace.Escrow.RegisterQuoteDeposit;
 using Marketplace.Escrow.TransferSoldNft;

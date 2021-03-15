@@ -13,12 +13,6 @@ namespace Marketplace.Escrow
         private byte[] _marketplacePrivateKeyBytes = null!;
             
         public string ConnectionString { get; set; } = null!;
-        
-        public string KusamaEndpoint { get; set; } = null!;
-
-        public string MarketplaceKusamaAddress { get; set; } = null!;
-
-        public PublicKey MarketplaceKusamaPublicKey => AddressUtils.GetPublicKeyFromAddr(MarketplaceKusamaAddress);
 
         public string UniqueEndpoint { get; set; } = null!;
 
