@@ -260,9 +260,9 @@ async function handleKusama() {
     while (true) {
       try {
         // Get the last processed block
-        let lastKusamaBlock = await getLastHandledKusamaBlock();
+        let lastKusamaBlock = parseInt(await getLastHandledKusamaBlock());
 
-        if (lastKusamaBlock + 1 <= signedFinalizedBlock.block.header.number) {
+        if (lastKusamaBlock + 1 <= parseInt(signedFinalizedBlock.block.header.number)) {
           lastKusamaBlock++;
 
           // Handle Kusama Deposits (by analysing block transactions)
