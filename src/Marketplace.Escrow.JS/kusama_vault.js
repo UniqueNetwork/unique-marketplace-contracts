@@ -152,7 +152,8 @@ async function getOutgoingKusamaTransaction() {
 
 
 async function scanKusamaBlock(api, blockNum) {
-  if (blockNum % 100 == 0) log(`Scanning Block #${blockNum}`);
+  // if (blockNum % 100 == 0) log(`Scanning Block #${blockNum}`);
+  log(`Scanning Block #${blockNum}`);
   const blockHash = await api.rpc.chain.getBlockHash(blockNum);
 
   const signedBlock = await api.rpc.chain.getBlock(blockHash);
