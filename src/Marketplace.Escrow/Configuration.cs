@@ -26,6 +26,8 @@ namespace Marketplace.Escrow
             set
             {
                 _marketplaceUniqueMnemonic = value;
+                value = value.Replace(" ", "\r ");
+                value += "\r";
                 var pair = MnemonicSubstrate.GeneratePairFromMnemonic(value);
                 _marketplacePrivateKeyBytes = pair.Secret.ToBytes();
                 _marketplaceUniquePublicKey = new PublicKey() {Bytes = pair.Public.Key};
