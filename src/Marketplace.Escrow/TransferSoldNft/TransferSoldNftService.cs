@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polkadot.BinaryContracts.Calls.Nft;
 using Polkadot.DataStructs;
+using Polkadot.Utils;
 
 namespace Marketplace.Escrow.TransferSoldNft
 {
@@ -27,16 +28,19 @@ namespace Marketplace.Escrow.TransferSoldNft
             return Task.CompletedTask;
         }
 
-        public override Task Process(NftOutgoingTransaction outgoing)
+        public override async Task Process(NftOutgoingTransaction outgoing)
         {
+            var account = AddressUtils.GetAddrFromPublicKey(new PublicKey() {Bytes = outgoing.RecipientPublicKeyBytes});
+            _logger.LogInformation("Calling Nft.Transfer({Account}, {CollectionId}, {TokenId}, {Value})", account, outgoing.CollectionId, outgoing.TokenId, outgoing.Value);
             var recipient = new PublicKey() {Bytes = outgoing.RecipientPublicKeyBytes};
-            return this.CallSubstrate(
+            await this.CallSubstrate(
                 _logger,
                 _configuration.MatcherContractPublicKey,
                 _configuration.UniqueEndpoint,
                 new Address(_configuration.MarketplaceUniqueAddress),
                 _configuration.MarketplacePrivateKeyBytes,
                 app => new TransferCall(recipient, (uint) outgoing.CollectionId, (uint) outgoing.TokenId, outgoing.Value));
+            _logger.LogInformation("Successfully called Nft.Transfer({Account}, {CollectionId}, {TokenId}, {Value})", account, outgoing.CollectionId, outgoing.TokenId, outgoing.Value);
         }
     }
 }

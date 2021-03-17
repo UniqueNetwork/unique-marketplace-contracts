@@ -50,7 +50,7 @@ namespace Marketplace.Escrow.Extensions
                     }, fail =>
                     {
                         var error = fail.ErrorMessage(application.Application);
-                        logger.LogError("Failed to register NFT via contract, {ErrorText}", error);
+                        logger.LogError("Failed to call substrate, {ErrorText}", error);
                         Interlocked.Exchange<TaskCompletionSource?>(ref completionSource, null)?.SetException(new ApplicationException(error));
                     });
                 }

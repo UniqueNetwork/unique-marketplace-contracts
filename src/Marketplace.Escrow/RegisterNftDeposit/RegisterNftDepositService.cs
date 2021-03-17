@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using Polkadot.Api;
 using Polkadot.BinaryContracts.Calls.Contracts;
 using Polkadot.DataStructs;
+using Polkadot.Utils;
 
 namespace Marketplace.Escrow.RegisterNftDeposit
 {
@@ -48,9 +49,11 @@ namespace Marketplace.Escrow.RegisterNftDeposit
             }, stoppingToken);
         }
 
-        public override Task Process(NftIncomingTransaction transaction)
+        public override async Task Process(NftIncomingTransaction transaction)
         {
-            return this.CallSubstrate(_logger,
+            var account = AddressUtils.GetAddrFromPublicKey(new PublicKey() {Bytes = transaction.OwnerPublicKeyBytes});
+            _logger.LogInformation("Calling Matcher.RegisterNftDeposit({Account}, {CollectionId}, {TokenId})", account, transaction.CollectionId, transaction.TokenId);
+            await this.CallSubstrate(_logger,
                 _configuration.MatcherContractPublicKey, 
                 _configuration.UniqueEndpoint,
                 new Address() { Symbols = _configuration.MarketplaceUniqueAddress}, 
@@ -61,6 +64,7 @@ namespace Marketplace.Escrow.RegisterNftDeposit
                     CollectionId = transaction.CollectionId,
                     TokenId = transaction.TokenId
                 }));
+            _logger.LogInformation("Successfully called Matcher.RegisterNftDeposit({Account}, {CollectionId}, {TokenId})", account, transaction.CollectionId, transaction.TokenId);
         }
     }
 }
