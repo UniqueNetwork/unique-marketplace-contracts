@@ -52,7 +52,7 @@ namespace Marketplace.Backend
 
             services.AddScoped<IOfferService, OfferService>();
             services.AddScoped<ITradeService, TradeService>();
-            services.AddScoped<Configuration>();
+            services.AddSingleton<Configuration>(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Marketplace.Db;
 using Marketplace.Escrow.EventBus;
+using Marketplace.Escrow.LogConfiguration;
 using Marketplace.Escrow.RegisterNftDeposit;
 using Marketplace.Escrow.RegisterQuoteDeposit;
 using Marketplace.Escrow.TransferSoldNft;
@@ -42,6 +43,7 @@ namespace Marketplace.Escrow
                     services.AddHostedService<RegisterNftDepositService>();
                     services.AddHostedService<RegisterQuoteDepositService>();
                     services.AddHostedService<TransferSoldNftService>();
+                    services.AddHostedService<LogConfigurationService>();
                     services.AddSingleton(configuration);
                     services.AddSingleton<IEventBusService, EventBusService>();
                 })
