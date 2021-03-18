@@ -31,7 +31,7 @@ namespace Marketplace.Backend.Trades
 
         private static Expression<Func<Trade, TradeDto>> MapTrade()
         {
-            return t => new TradeDto(t.TradeDate, t.Offer.CollectionId, t.Offer.TokenId, t.Offer.Price,
+            return t => new TradeDto(t.TradeDate, t.Offer.CollectionId, t.Offer.TokenId, t.Offer.Price.ToString(), t.Offer.QuoteId,
                 t.Offer.Seller, t.Buyer, t.Offer.Metadata);
         }
 
