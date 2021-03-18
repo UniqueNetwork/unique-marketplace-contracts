@@ -328,7 +328,7 @@ async function scanNftBlock(api, admin, blockNum) {
     const events = allRecords
       .filter(({ phase }) =>
         phase.isApplyExtrinsic &&
-        phase.asApplyExtrinsic.eq(index)
+        phase.asApplyExtrinsic.eq(ex.index)
       )
       .map(({ event }) => `${event.section}.${event.method}`);
     if (events.includes('system.ExtrinsicSuccess')) {
