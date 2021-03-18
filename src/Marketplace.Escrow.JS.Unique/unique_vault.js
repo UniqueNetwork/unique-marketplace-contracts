@@ -137,8 +137,6 @@ async function updateOffer(collectionId, tokenId, newStatus) {
   const conn = await getDbConnection();
 
   const id = await getOpenOfferId(collectionId, tokenId);
-  console.log(`Looking up offer for ${collectionId}-${tokenId}`);
-  console.log(`Updating offer ${id}`);
 
   // Only update active offer (should be one)
   await conn.query(`UPDATE public."${offerTable}" SET "OfferStatus" = ${newStatus} WHERE "Id" = '${id}'`);
@@ -254,7 +252,7 @@ function sendTransactionAsync(sender, transaction) {
         }
       });
     } catch (e) {
-      console.log('Error: ', e);
+      log('Error: ' + e.toString(), "ERROR");
       reject(e);
     }
   });
@@ -276,7 +274,7 @@ async function registerQuoteDepositAsync(api, sender, depositorAddress, amount) 
 }
 
 async function registerNftDepositAsync(api, sender, depositorAddress, collection_id, token_id, blockNumber) {
-  console.log(`${depositorAddress} deposited ${collection_id}, ${token_id}`);
+  log(`${depositorAddress} deposited ${collection_id}, ${token_id}`);
   const abi = new Abi(contractAbi);
   const contract = new ContractPromise(api, abi, config.marketContractAddress);
 
@@ -321,50 +319,52 @@ async function scanNftBlock(api, admin, blockNum) {
   const signedBlock = await api.rpc.chain.getBlock(blockHash);
   const allRecords = await api.query.system.events.at(blockHash);
 
-  // console.log(`Reading Block ${blockNum} Transactions`);
-  for (const ex of signedBlock.block.extrinsics) {
+  // log(`Reading Block ${blockNum} Transactions`);
+  await signedBlock.block.extrinsics.forEach(async (ex, index) => {
+
     const { _isSigned, _meta, method: { args, method, section } } = ex;
 
-    const events = allRecords
-      .filter(({ phase }) =>
-        phase.isApplyExtrinsic &&
-        phase.asApplyExtrinsic.eq(ex.index)
-      )
-      .map(({ event }) => `${event.section}.${event.method}`);
-    if (events.includes('system.ExtrinsicSuccess')) {
-      // This call is successful
+    if ((section == "nft") && (method == "transfer") && (args[0] == admin.address.toString())) {
 
-      if ((section == "nft") && (method == "transfer") && (args[0] == admin.address.toString())) {
+      // Check that transfer was actually successful:
+      let { Owner } = await api.query.nft.nftItemList(args[1], args[2]);
+      if (Owner == admin.address.toString()) {
+        log(`NFT deposit from ${ex.signer.toString()} id (${args[1]}, ${args[2]})`, "RECEIVED");
+  
+        // Register NFT Deposit
+        const deposit = {
+          address: ex.signer.toString(),
+          collectionId: args[1],
+          tokenId: args[2]
+        };
 
-        // Check that transfer was actually successful:
-        let { Owner } = await api.query.nft.nftItemList(args[1], args[2]);
-        if (Owner == admin.address.toString()) {
-          log(`NFT deposit from ${ex.signer.toString()} id (${args[1]}, ${args[2]})`, "RECEIVED");
-    
-          // Register NFT Deposit
-          const deposit = {
-            address: ex.signer.toString(),
-            collectionId: args[1],
-            tokenId: args[2]
-          };
-  
-          try {
-            await registerNftDepositAsync(api, admin, deposit.address, deposit.collectionId, deposit.tokenId, blockNum);
-            log(`NFT deposit from ${deposit.address} id (${deposit.collectionId}, ${deposit.tokenId})`, "REGISTERED");
-          } catch (e) {
-            log(`NFT deposit from ${deposit.address} id (${deposit.collectionId}, ${deposit.tokenId})`, "FAILED TO REGISTER");
-          }
-  
-        }
-        else {
-          log(`NFT deposit from ${ex.signer.toString()} id (${args[1]}, ${args[2]})`, "FAILED TX");
-        }
-  
-      }
-      else if ((section == "contracts") && (method == "call")) {
         try {
+          await registerNftDepositAsync(api, admin, deposit.address, deposit.collectionId, deposit.tokenId, blockNum);
+          log(`NFT deposit from ${deposit.address} id (${deposit.collectionId}, ${deposit.tokenId})`, "REGISTERED");
+        } catch (e) {
+          log(`NFT deposit from ${deposit.address} id (${deposit.collectionId}, ${deposit.tokenId})`, "FAILED TO REGISTER");
+        }
+
+      }
+      else {
+        log(`NFT deposit from ${ex.signer.toString()} id (${args[1]}, ${args[2]})`, "FAILED TX");
+      }
+
+    }
+    else if ((section == "contracts") && (method == "call")) {
+      try {
+
+        const events = allRecords
+        .filter(({ phase }) =>
+          phase.isApplyExtrinsic &&
+          phase.asApplyExtrinsic.eq(index)
+        )
+        .map(({ event }) => `${event.section}.${event.method}`);
+
+        //   // This call is successful
+        if (events.includes('system.ExtrinsicSuccess')) {
           log(`Contract call in block ${blockNum}: ${args[0].toString()}, ${args[1].toString()}, ${args[2].toString()}, ${args[3].toString()}`);
-  
+
           let data = args[3].toString();
           log(`data = ${data}`);
           if (data.includes("261a7028")) {
@@ -454,12 +454,12 @@ async function scanNftBlock(api, admin, blockNum) {
             await sendNftTxAsync(api, admin, buyerAddress.toString(), parseInt(collectionId), parseInt(tokenId));
           }
         }
-        catch (e) {
-          log(e, "ERROR");
-        }
+      }
+      catch (e) {
+        log(e, "ERROR");
       }
     }
-  }
+  });
 }
 
 async function handleUnique() {
