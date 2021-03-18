@@ -314,8 +314,7 @@ async function sendNftTxAsync(api, sender, recipient, collection_id, token_id) {
 
 async function scanNftBlock(api, admin, blockNum) {
 
-  // if (blockNum % 10 == 0) 
-  log(`Scanning Block #${blockNum}`);
+  if (blockNum % 10 == 0) log(`Scanning Block #${blockNum}`);
   const blockHash = await api.rpc.chain.getBlockHash(blockNum);
 
   // Memo: If it fails here, check custom types
