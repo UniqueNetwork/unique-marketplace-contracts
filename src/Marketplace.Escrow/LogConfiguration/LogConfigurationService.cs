@@ -35,7 +35,7 @@ namespace Marketplace.Escrow.LogConfiguration
                 application?.Dispose();
             }, _logger, _configuration.MatcherContractPublicKey);
             application.Application.Connect(_configuration.UniqueEndpoint);
-            application.Application.SubscribeAccountInfo(_configuration.MarketplaceUniqueAddress, info =>
+            application.Application!.SubscribeAccountInfo(_configuration.MarketplaceUniqueAddress, info =>
             {
                 Interlocked.Exchange<TaskCompletionSource?>(ref completionSource, null)?.SetResult();
                 application.Dispose();

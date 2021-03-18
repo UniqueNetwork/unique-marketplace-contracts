@@ -180,6 +180,7 @@ namespace Marketplace.Escrow.UniqueScanner
                     OfferStatus = OfferStatus.Active,
                     SellerPublicKeyBytes = sender.Bytes,
                     Metadata = "",
+                    QuoteId = askParameter.QuoteId,
                 });
                 await dbContext.SaveChangesAsync();
             };
