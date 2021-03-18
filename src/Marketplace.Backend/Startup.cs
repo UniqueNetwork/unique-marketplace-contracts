@@ -52,7 +52,7 @@ namespace Marketplace.Backend
 
             services.AddScoped<IOfferService, OfferService>();
             services.AddScoped<ITradeService, TradeService>();
-            services.AddScoped<Configuration>();
+            services.AddSingleton<Configuration>(Configuration);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -76,9 +76,21 @@ namespace Marketplace.Backend
                 endpoints.MapControllers();
             });
 
-            using var scope = app.ApplicationServices.CreateScope();
-            var context = scope.ServiceProvider.GetService<MarketplaceDbContext>();
-            context!.Database.Migrate();
+            var migrated = false;
+            do
+            {
+                try
+                {
+                    using var scope = app.ApplicationServices.CreateScope();
+                    var context = scope.ServiceProvider.GetService<MarketplaceDbContext>();
+                    context!.Database.Migrate();
+                    migrated = true;
+                }
+                catch (Exception)
+                {
+                    Task.Delay(TimeSpan.FromSeconds(10)).GetAwaiter().GetResult();
+                }
+            } while (!migrated);
         }
     }
 }

@@ -2,5 +2,5 @@
 
 namespace Marketplace.Backend.Offers
 {
-    public record OfferDto(ulong CollectionId, ulong TokenId, BigInteger Price, string Seller, string Metadata);
+    public record OfferDto(ulong CollectionId, ulong TokenId, string Price, ulong QuoteId, string Seller, string Metadata);
 }

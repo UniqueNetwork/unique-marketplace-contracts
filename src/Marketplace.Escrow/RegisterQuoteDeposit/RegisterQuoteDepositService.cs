@@ -9,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polkadot.BinaryContracts;
 using Polkadot.DataStructs;
+using Polkadot.Utils;
 
 namespace Marketplace.Escrow.RegisterQuoteDeposit
 {
@@ -29,9 +30,11 @@ namespace Marketplace.Escrow.RegisterQuoteDeposit
             return Task.CompletedTask;
         }
 
-        public override Task Process(QuoteIncomingTransaction quoteIncoming)
+        public override async Task Process(QuoteIncomingTransaction quoteIncoming)
         {
-            return this.CallSubstrate(_logger,
+            var account = AddressUtils.GetAddrFromPublicKey(new PublicKey() {Bytes = quoteIncoming.AccountPublicKeyBytes});
+            _logger.LogInformation("Calling Matcher.RegisterDeposit({Account}, {Balance}, {QuoteId})", account, quoteIncoming.Amount, quoteIncoming.QuoteId);
+            await this.CallSubstrate(_logger,
                 _configuration.MatcherContractPublicKey, 
                 _configuration.UniqueEndpoint,
                 new Address() { Symbols = _configuration.MarketplaceUniqueAddress}, 
@@ -42,6 +45,7 @@ namespace Marketplace.Escrow.RegisterQuoteDeposit
                     DepositBalance = new Balance() {Value = quoteIncoming.Amount},
                     QuoteId = quoteIncoming.QuoteId
                 }));
+            _logger.LogInformation("Successfully called Matcher.RegisterDeposit({Account}, {Balance}, {QuoteId})", account, quoteIncoming.Amount, quoteIncoming.QuoteId);
         }
     }
 }

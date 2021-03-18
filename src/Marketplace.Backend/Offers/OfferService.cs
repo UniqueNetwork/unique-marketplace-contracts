@@ -34,7 +34,7 @@ namespace Marketplace.Backend.Offers
 
         private static Expression<Func<Offer, OfferDto>> MapOfferDto()
         {
-            return o => new OfferDto(o.CollectionId, o.TokenId, o.Price, o.Seller, o.Metadata);
+            return o => new OfferDto(o.CollectionId, o.TokenId, o.Price.ToString(), o.QuoteId, o.Seller, o.Metadata);
         }
 
         public async Task<IList<OfferDto>> Get(ulong collectionId)

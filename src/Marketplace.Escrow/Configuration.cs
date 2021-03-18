@@ -1,4 +1,5 @@
-﻿using Marketplace.Db;
+﻿using System;
+using Marketplace.Db;
 using Marketplace.Escrow.MatcherContract.Calls;
 using Mnemonic;
 using Polkadot.DataStructs;
@@ -25,9 +26,13 @@ namespace Marketplace.Escrow
             get => _marketplaceUniqueMnemonic;
             set
             {
+                if (Environment.NewLine == "\n")
+                {
+                    value = value.Replace(" ", "\r ");
+                    value += "\r";
+                }
+
                 _marketplaceUniqueMnemonic = value;
-                value = value.Replace(" ", "\r ");
-                value += "\r";
                 var pair = MnemonicSubstrate.GeneratePairFromMnemonic(value);
                 _marketplacePrivateKeyBytes = pair.Secret.ToBytes();
                 _marketplaceUniquePublicKey = new PublicKey() {Bytes = pair.Public.Key};
