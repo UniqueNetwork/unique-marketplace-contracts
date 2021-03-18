@@ -180,7 +180,7 @@ namespace Marketplace.Escrow.DataProcessing
                     using var scope = _scopeFactory.CreateScope();
                     var dbContext = scope.ServiceProvider.GetService<MarketplaceDbContext>();
                     var dataToProcess = await dbContext!.Set<TModel>().FirstOrDefaultAsync(t =>
-                            t.Status == ProcessingDataStatus.InProgress && t.LockTime == null || t.LockTime < now,
+                            t.Status == ProcessingDataStatus.InProgress && (t.LockTime == null || t.LockTime < now),
                         cancellationToken);
                     if (dataToProcess == null)
                     {
