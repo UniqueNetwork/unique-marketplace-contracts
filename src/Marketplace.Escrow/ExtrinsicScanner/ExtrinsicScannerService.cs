@@ -18,6 +18,7 @@ using Polkadot.BinaryContracts.Events;
 using Polkadot.BinarySerializer.Extensions;
 using Polkadot.Data;
 using Polkadot.DataStructs;
+using Polkadot.Exceptions;
 using Polkadot.Utils;
 
 namespace Marketplace.Escrow.TransactionScanner
@@ -87,26 +88,41 @@ namespace Marketplace.Escrow.TransactionScanner
                 stoppingToken.ThrowIfCancellationRequested();
                 _application.Dispose();
             }
-            
-            _application?.HealthCheck(TimeSpan.FromMinutes(1), OnHealthCheck);
-            var blockHash = _application!.Application!.GetBlockHash(new GetBlockHashParams() {BlockNumber = blockNumber}).Hash;
-            _application.HealthCheck(TimeSpan.FromMinutes(1), OnHealthCheck);
-            var block = _application.Application.GetBlock(new GetBlockParams() {BlockHash = blockHash});
-            _application.HealthCheck(TimeSpan.FromMinutes(1), OnHealthCheck);
-            var eventsString =
-                    _application.Application.StorageApi.GetStorage("System", "Events", new GetBlockHashParams() {BlockNumber = blockNumber});
-            _application.CancelHealthCheck();
 
-            var eventsList = _application.Application.Serializer.Deserialize<EventList>(eventsString.HexToByteArray());
-            var extrinsics = block.Block.Extrinsic
-                .Select(e => e!.HexToByteArray())
-                .Select(e => _application.Application.Serializer.DeserializeAssertReadAll<DeserializedExtrinsic>(e))
-                .Where((_, index) => eventsList.ExtrinsicSuccess((uint)index))
-                .ToList();
+            try
+            {
+                _application?.HealthCheck(TimeSpan.FromMinutes(1), OnHealthCheck);
+                var blockHash = _application!.Application!
+                    .GetBlockHash(new GetBlockHashParams() {BlockNumber = blockNumber}).Hash;
+                _application.HealthCheck(TimeSpan.FromMinutes(1), OnHealthCheck);
+                var block = _application.Application.GetBlock(new GetBlockParams() {BlockHash = blockHash});
+                _application.HealthCheck(TimeSpan.FromMinutes(1), OnHealthCheck);
+                var eventsString =
+                    _application.Application.StorageApi.GetStorage("System", "Events",
+                        new GetBlockHashParams() {BlockNumber = blockNumber});
+                _application.CancelHealthCheck();
 
-            var actions = ProcessExtrinsics(extrinsics, blockNumber, stoppingToken).ToList();
+                var eventsList =
+                    _application.Application.Serializer.Deserialize<EventList>(eventsString.HexToByteArray());
+                var extrinsics = block.Block.Extrinsic
+                    .Select(e => e!.HexToByteArray())
+                    .Select(e => _application.Application.Serializer.DeserializeAssertReadAll<DeserializedExtrinsic>(e))
+                    .Where((_, index) => eventsList.ExtrinsicSuccess((uint) index))
+                    .ToList();
 
-            stoppingToken.ThrowIfCancellationRequested();
+                var actions = ProcessExtrinsics(extrinsics, blockNumber, stoppingToken).ToList();
+
+                stoppingToken.ThrowIfCancellationRequested();
+                await SaveToDatabase(blockNumber, stoppingToken, actions);
+            }
+            catch (JrpcErrorException ex) when (ex.Code == -32603)
+            {
+                await SaveToDatabase(blockNumber, stoppingToken, Array.Empty<ExtrinsicHandler>());
+            }
+        }
+
+        private async Task SaveToDatabase(ulong blockNumber, CancellationToken stoppingToken, ICollection<ExtrinsicHandler> actions)
+        {
             using var scope = _scopeFactory.CreateScope();
             var dbContext = scope.ServiceProvider.GetService<MarketplaceDbContext>();
             await using var transaction = await dbContext!.Database.BeginTransactionAsync(_isolationLevel, stoppingToken);
@@ -119,7 +135,7 @@ namespace Marketplace.Escrow.TransactionScanner
                     await transaction.RollbackAsync(stoppingToken);
                     return;
                 }
-                
+
                 await SaveProcessedBlock(blockNumber, dbContext, stoppingToken);
 
                 foreach (var action in actions)
