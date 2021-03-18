@@ -315,7 +315,9 @@ async function handleKusama() {
 }
 
 async function main() {
-  await handleKusama();
+  // await handleKusama();
+
+  await addIncomingKusamaTransaction("1500000000000000", "5HYSDaVsNj3mQivDVn3XsAfMvfaFMXSxEcEQxCYUetNgQjjM", 404316);
 }
 
 main().catch(console.error).finally(() => process.exit());
