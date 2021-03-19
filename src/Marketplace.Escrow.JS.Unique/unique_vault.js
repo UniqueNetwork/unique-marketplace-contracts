@@ -2,7 +2,6 @@ const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
 const { Abi, ContractPromise } = require("@polkadot/api-contract");
 const { hexToU8a } = require('@polkadot/util');
 const { decodeAddress, encodeAddress } = require('@polkadot/util-crypto');
-const delay = require('delay');
 const config = require('./config');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
@@ -27,6 +26,9 @@ const contractAbi = require("./market_metadata.json");
 
 const quoteId = 2; // KSM
 
+let bestBlockNumber = 0; // The highest block in chain (not final)
+let timer;
+
 const blackList = [ 7395, 1745, 8587, 573, 4732, 3248, 6986, 7202, 6079, 1732, 6494, 7553, 6840, 4541, 2102, 3503, 6560, 4269, 2659, 3912, 3470, 6290, 5811, 5209, 8322, 1813, 7771, 2578, 2661, 2983, 2119, 3310, 1547, 1740, 3187, 8194, 4651, 6188, 2167, 3487, 3106, 6070, 3446, 2407, 5870, 3745, 6389, 3246, 9385, 9680, 6457, 8462, 2350, 3927, 2269, 8485, 6198, 6787, 2047, 2197, 2379, 2466, 2558, 2682, 2759, 2979, 4232, 4273, 8187, 8190, 2935, 2673, 5228, 7683, 2075, 9845, 1645, 3198, 7490, 3192, 7907, 3167, 858, 239, 7613, 2790, 7043, 5536, 8277, 1134, 6378, 2416, 2373, 2240, 3952, 5017, 4999, 5986, 3159, 6155, 9329, 6445, 2117, 3935, 6091, 7841, 8725, 5194, 5744, 8120, 5930, 578, 6171, 6930, 2180, 6212, 5963, 7097, 8774, 5233, 7978, 2938, 2364, 1823, 1840, 8672, 5616, 737, 6122, 8769, 615, 9729, 3489, 427, 9883, 8678, 6579, 1776, 7061, 873, 5324, 2390, 6187, 9517, 2321, 3390, 3180, 6692, 2129, 9854, 1572, 7412, 3966, 1302, 1145, 1067, 3519, 7387, 8314, 648, 219, 2055, 825, 1195
 ];
 
@@ -50,6 +52,22 @@ function getDay() {
 
 function log(operation, status = "") {
   console.log(`${getDay()} ${getTime()}: ${operation}${status.length > 0?',':''}${status}`);
+}
+
+let resolver = null;
+function delay(ms) {
+  return new Promise(async (resolve, reject) => {
+    resolver = resolve;
+    timer = setTimeout(() => { 
+      resolver = null;
+      resolve();
+    }, ms);
+  });
+}
+
+function cancelDelay() {
+  clearTimeout(timer);
+  if (resolver) resolver();
 }
 
 async function getUniqueConnection() {
@@ -240,15 +258,17 @@ function getTransactionStatus(events, status) {
 function sendTransactionAsync(sender, transaction) {
   return new Promise(async (resolve, reject) => {
     try {
-      await transaction.signAndSend(sender, ({ events = [], status }) => {
+      let unsub = await transaction.signAndSend(sender, ({ events = [], status }) => {
         const transactionStatus = getTransactionStatus(events, status);
 
         if (transactionStatus === "Success") {
           log(`Transaction successful`);
           resolve(events);
+          unsub();
         } else if (transactionStatus === "Fail") {
           log(`Something went wrong with transaction. Status: ${status}`);
           reject(events);
+          unsub();
         }
       });
     } catch (e) {
@@ -320,7 +340,23 @@ async function scanNftBlock(api, admin, blockNum) {
   const allRecords = await api.query.system.events.at(blockHash);
 
   // log(`Reading Block ${blockNum} Transactions`);
-  await signedBlock.block.extrinsics.forEach(async (ex, index) => {
+
+  // collect successful extrinsics
+  let successfulExtrinsics = [];
+  signedBlock.block.extrinsics.forEach((ex, index) => {
+    const events = allRecords
+    .filter(({ phase }) =>
+      phase.isApplyExtrinsic &&
+      phase.asApplyExtrinsic.eq(index)
+    )
+    .map(({ event }) => `${event.section}.${event.method}`);
+
+    if (events.includes('system.ExtrinsicSuccess')) {
+      successfulExtrinsics.push(ex);
+    }
+  });
+
+  for (let ex of successfulExtrinsics) {
 
     const { _isSigned, _meta, method: { args, method, section } } = ex;
 
@@ -351,114 +387,126 @@ async function scanNftBlock(api, admin, blockNum) {
       }
 
     }
-    else if ((section == "contracts") && (method == "call")) {
+    else if ((section == "contracts") && (method == "call") && (args[0].toString() == config.marketContractAddress)) {
       try {
+        log(`Contract call in block ${blockNum}: ${args[0].toString()}, ${args[1].toString()}, ${args[2].toString()}, ${args[3].toString()}`);
 
-        const events = allRecords
-        .filter(({ phase }) =>
-          phase.isApplyExtrinsic &&
-          phase.asApplyExtrinsic.eq(index)
-        )
-        .map(({ event }) => `${event.section}.${event.method}`);
+        let data = args[3].toString();
+        log(`data = ${data}`);
 
-        //   // This call is successful
-        if (events.includes('system.ExtrinsicSuccess')) {
-          log(`Contract call in block ${blockNum}: ${args[0].toString()}, ${args[1].toString()}, ${args[2].toString()}, ${args[3].toString()}`);
+        // Quote Deposit registration
+        // 0x5eb1cb1f02000000000000000080c6a47e8d03000000000000000000f2536430fd61850d86660508a278f2cd5f7258ea1c1cf9491c5d848327c98121
 
-          let data = args[3].toString();
-          log(`data = ${data}`);
-          if (data.includes("261a7028")) {
-            const tokenId = data[28] + data[29] + data[26] + data[27];
-            const id = Buffer.from(tokenId, 'hex').readIntBE(0, 2).toString();
-            log(`${ex.signer.toString()} bought ${id} in block ${blockNum} hash: ${blockHash}`);
-            log(`${ex.signer.toString()} bought ${id} in block ${blockNum} hash: ${blockHash}`, "SUCCESS");
-          }
-  
-          // Quote Deposit registration
-          // 0x5eb1cb1f02000000000000000080c6a47e8d03000000000000000000f2536430fd61850d86660508a278f2cd5f7258ea1c1cf9491c5d848327c98121
-  
-          // Buy 3457 (0D81):
-          // Block hash:   0x3a88c2efd7d7131f43f7771c3e50a98cd90cf9b1e8b83ed890207f98ea93495a
-          // Block number: 1,384,383
-          // Data:         0x261a70280400000000000000810d000000000000
-  
-          // Withdraw NFT/Amount
-          // 0xb3f7898ecbda75ddf8f6cea3f584c9c46fb0fe7fbb645804c89261014b78ff22
-          // 1,384,398
-          // 0xe80efa690400000000000000860f0000…88e769c8628cc58d53fbe7f6fbc52b3e
-  
-          // Register NFT 4744 (0x1288 = 8812 LE) deposit
-          // 0xe80efa6904000000000000008812000000000000d81f689c5d4aef49114017168ed953595ead394faa5acfd8877702693157620a
-  
-  
-          // Ask call
-          if (data.includes("7d02ceb8")) {
-            log(`======== Ask Call`);
-            //    Ask ID   collection       token            quote            price
-            // 0x 7d02ceb8 0300000000000000 1200000000000000 0200000000000000 0080c6a47e8d03000000000000000000
-            //    0        4                12               20               28
-  
-            if (data.substring(0,2) === "0x") data = data.substring(2);
-            const collectionIdHex = "0x" + data.substring(8, 24);
-            const tokenIdHex = "0x" + data.substring(24, 40);
-            const quoteIdHex = "0x" + data.substring(40, 56);
-            const priceHex = "0x" + data.substring(56);
-            const collectionId = beHexToNum(collectionIdHex).toString();
-            const tokenId = beHexToNum(tokenIdHex).toString();
-            const quoteId = beHexToNum(quoteIdHex).toString();
-            const price = beHexToNum(priceHex).toString();
-            log(`${ex.signer.toString()} listed ${collectionId}-${tokenId} in block ${blockNum} hash: ${blockHash} for ${quoteId}-${price}`);
-  
-            await addOffer(ex.signer.toString(), collectionId, tokenId, quoteId, price);
-          }
-  
-          // Buy call
-          if (data.includes("151e67be03")) {
-            // We expect 4 events here with 
-            // [1] being QuoteWithdrawMatched and 
-            // [2] being NFTWithdraw 
-  
-            log(`======== WithdrawNFT Event`);
-            const buyerAddress = encodeAddress(hexToU8a(allRecords[1].topics[3].toString()));
-            log(`NFT Buyer address: ${buyerAddress}`);
-            const tokenIdBN = beHexToNum(allRecords[1].topics[1].toString());
-            const tokenIdOffset = new BigNumber('0x200000000', 16);
-            const tokenId = tokenIdBN.minus(tokenIdOffset); 
-            log(`tokenId = ${tokenId}`);
-            const collectionIdBN = beHexToNum(allRecords[1].topics[0].toString());
-            const collectionIdOffset = new BigNumber('0x100000000', 16);
-            const collectionId = collectionIdBN.minus(collectionIdOffset); 
-            log(`collectionId = ${collectionId}`);
-            
-            log(`======== WithdrawUniqueMatched Event`);
-            const sellerAddress = encodeAddress(hexToU8a(allRecords[2].topics[2].toString()));
-            log(`NFT Seller address: ${sellerAddress}`);
-            const priceBN = beHexToNum(allRecords[2].topics[0].toString());
-            const priceOffset = new BigNumber('0x1000000000000000000000000000000', 16);
-            const price = priceBN.minus(priceOffset);
-            const quoteIdBN = beHexToNum(allRecords[2].topics[1].toString());
-            const quoteIdOffset = new BigNumber('0x100000000', 16);
-            const quoteId = quoteIdBN.minus(quoteIdOffset);
-            log(`Price: ${quoteId} - ${price.toString()}`);
-  
-            // Update offer to done (status = 2 = Traded)
-            const id = await updateOffer(collectionId, tokenId, 2);
-  
-            // Record trade
-            await addTrade(id, buyerAddress);
-  
-            // Record outgoing quote tx
-            await addOutgoingQuoteTransaction(quoteId, price.toString(), sellerAddress);
-  
-            // Execute NFT transfer to buyer
-            await sendNftTxAsync(api, admin, buyerAddress.toString(), parseInt(collectionId), parseInt(tokenId));
-          }
+        // Buy 3457 (0D81):
+        // Block hash:   0x3a88c2efd7d7131f43f7771c3e50a98cd90cf9b1e8b83ed890207f98ea93495a
+        // Block number: 1,384,383
+        // Data:         0x261a70280400000000000000810d000000000000
+
+        // Withdraw NFT/Amount
+        // 0xb3f7898ecbda75ddf8f6cea3f584c9c46fb0fe7fbb645804c89261014b78ff22
+        // 1,384,398
+        // 0xe80efa690400000000000000860f0000…88e769c8628cc58d53fbe7f6fbc52b3e
+
+        // Register NFT 4744 (0x1288 = 8812 LE) deposit
+        // 0xe80efa6904000000000000008812000000000000d81f689c5d4aef49114017168ed953595ead394faa5acfd8877702693157620a
+
+
+        // Ask call
+        if (data.includes("7d02ceb8")) {
+          log(`======== Ask Call`);
+          //    Ask ID   collection       token            quote            price
+          // 0x 7d02ceb8 0300000000000000 1200000000000000 0200000000000000 0080c6a47e8d03000000000000000000
+          //    0        4                12               20               28
+
+          if (data.substring(0,2) === "0x") data = data.substring(2);
+          const collectionIdHex = "0x" + data.substring(8, 24);
+          const tokenIdHex = "0x" + data.substring(24, 40);
+          const quoteIdHex = "0x" + data.substring(40, 56);
+          const priceHex = "0x" + data.substring(56);
+          const collectionId = beHexToNum(collectionIdHex).toString();
+          const tokenId = beHexToNum(tokenIdHex).toString();
+          const quoteId = beHexToNum(quoteIdHex).toString();
+          const price = beHexToNum(priceHex).toString();
+          log(`${ex.signer.toString()} listed ${collectionId}-${tokenId} in block ${blockNum} hash: ${blockHash} for ${quoteId}-${price}`);
+
+          await addOffer(ex.signer.toString(), collectionId, tokenId, quoteId, price);
+        }
+
+        // Buy call
+        if (data.includes("151e67be")) {
+          // We expect 4 events here with 
+          // [1] being QuoteWithdrawMatched and 
+          // [2] being NFTWithdraw 
+
+          log(`======== WithdrawNFT Event`);
+          const buyerAddress = encodeAddress(hexToU8a(allRecords[1].topics[3].toString()));
+          log(`NFT Buyer address: ${buyerAddress}`);
+          const tokenIdBN = beHexToNum(allRecords[1].topics[1].toString());
+          const tokenIdOffset = new BigNumber('0x200000000', 16);
+          const tokenId = tokenIdBN.minus(tokenIdOffset); 
+          log(`tokenId = ${tokenId}`);
+          const collectionIdBN = beHexToNum(allRecords[1].topics[0].toString());
+          const collectionIdOffset = new BigNumber('0x100000000', 16);
+          const collectionId = collectionIdBN.minus(collectionIdOffset); 
+          log(`collectionId = ${collectionId}`);
+          
+          log(`======== WithdrawUniqueMatched Event`);
+          const sellerAddress = encodeAddress(hexToU8a(allRecords[2].topics[2].toString()));
+          log(`NFT Seller address: ${sellerAddress}`);
+          const priceBN = beHexToNum(allRecords[2].topics[0].toString());
+          const priceOffset = new BigNumber('0x1000000000000000000000000000000', 16);
+          const price = priceBN.minus(priceOffset);
+          const quoteIdBN = beHexToNum(allRecords[2].topics[1].toString());
+          const quoteIdOffset = new BigNumber('0x100000000', 16);
+          const quoteId = quoteIdBN.minus(quoteIdOffset);
+          log(`Price: ${quoteId} - ${price.toString()}`);
+
+          // Update offer to done (status = 3 = Traded)
+          const id = await updateOffer(collectionId, tokenId, 3);
+
+          // Record trade
+          await addTrade(id, buyerAddress);
+
+          // Record outgoing quote tx
+          await addOutgoingQuoteTransaction(quoteId, price.toString(), sellerAddress);
+
+          // Execute NFT transfer to buyer
+          await sendNftTxAsync(api, admin, buyerAddress.toString(), parseInt(collectionId), parseInt(tokenId));
+        }
+
+        // Cancel: 0x898fa41a03000000000000000100000000000000
+        if (data.includes("898fa41a")) {
+
+          log(`======== Cancel call - WithdrawNFT Event`);
+          const sellerAddress = encodeAddress(hexToU8a(allRecords[1].topics[3].toString()));
+          log(`NFT Seller address: ${sellerAddress}`);
+          const tokenIdBN = beHexToNum(allRecords[1].topics[1].toString());
+          const tokenIdOffset = new BigNumber('0x200000000', 16);
+          const tokenId = tokenIdBN.minus(tokenIdOffset); 
+          log(`tokenId = ${tokenId}`);
+          const collectionIdBN = beHexToNum(allRecords[1].topics[0].toString());
+          const collectionIdOffset = new BigNumber('0x100000000', 16);
+          const collectionId = collectionIdBN.minus(collectionIdOffset); 
+          log(`collectionId = ${collectionId}`);
+
+          // Update offer to calceled (status = 2 = Canceled)
+          await updateOffer(collectionId, tokenId, 2);
+
+          // Execute NFT transfer back to seller
+          await sendNftTxAsync(api, admin, sellerAddress.toString(), parseInt(collectionId), parseInt(tokenId));
         }
       }
       catch (e) {
         log(e, "ERROR");
       }
     }
+  }
+}
+
+async function subscribeToBlocks(api) {
+  await api.rpc.chain.subscribeNewHeads((header) => {
+    bestBlockNumber = header.number;
+    cancelDelay();
   });
 }
 
@@ -470,19 +518,18 @@ async function handleUnique() {
   adminAddress = admin.address.toString();
   log(`Escrow admin address: ${adminAddress}`);
 
+  await subscribeToBlocks(api);
+
   // Work indefinitely
   while (true) {
 
     // 1. Catch up with blocks
-    const finalizedHashNft = await api.rpc.chain.getFinalizedHead();
-    const signedFinalizedBlockNft = await api.rpc.chain.getBlock(finalizedHashNft);
-
     while (true) {
       // Get last processed block
       let blockNum = parseInt(await getLastHandledUniqueBlock()) + 1;
 
       try {
-        if (blockNum <= signedFinalizedBlockNft.block.header.number) {
+        if (blockNum <= bestBlockNumber) {
           await addHandledUniqueBlock(blockNum);
           
           // Handle NFT Deposits (by analysing block transactions)
@@ -514,8 +561,8 @@ async function handleUnique() {
       }
 
     } while (deposit);
-    
 
+    await delay(6000);
   }
 
 }
