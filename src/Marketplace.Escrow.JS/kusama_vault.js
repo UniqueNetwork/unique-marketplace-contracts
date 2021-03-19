@@ -1,5 +1,4 @@
 const { ApiPromise, WsProvider, Keyring } = require('@polkadot/api');
-const { hexToU8a } = require('@polkadot/util');
 const delay = require('delay');
 const config = require('./config');
 const { decodeAddress, encodeAddress } = require('@polkadot/util-crypto');
@@ -126,14 +125,12 @@ async function getOutgoingKusamaTransaction() {
   };
 
   if (res.rows.length > 0) {
-    let publicKey = res.rows[0].RecipientPublicKey;
+    // Decode from base64
+    let publicKey = Buffer.from(res.rows[0].RecipientPublicKey, 'base64');
 
     try {
-      if ((publicKey[0] != '0') || (publicKey[1] != 'x'))
-        publicKey = '0x' + publicKey;
-
       // Convert public key into address
-      const address = encodeAddress(hexToU8a(publicKey));
+      const address = encodeAddress(publicKey);
       
       ksmTx.id = res.rows[0].Id;
       ksmTx.recipient = address;
@@ -152,7 +149,7 @@ async function getOutgoingKusamaTransaction() {
 
 
 async function scanKusamaBlock(api, blockNum) {
-  if (blockNum % 100 == 0) log(`Scanning Block #${blockNum}`);
+  if (blockNum % 10 == 0) log(`Scanning Block #${blockNum}`);
   const blockHash = await api.rpc.chain.getBlockHash(blockNum);
 
   const signedBlock = await api.rpc.chain.getBlock(blockHash);
@@ -170,7 +167,7 @@ async function scanKusamaBlock(api, blockNum) {
         .map(({ event }) => `${event.section}.${event.method}`);
 
       if (events.includes('system.ExtrinsicSuccess')) {
-        log(`Quote deposit from ${ex.signer.toString()} amount ${args[1]}`, "RECEIVED");
+        log(`Quote deposit in block ${blockNum} from ${ex.signer.toString()} amount ${args[1]}`, "RECEIVED");
   
         // Register Quote Deposit (save to DB)
         const amount = args[1];
@@ -297,8 +294,9 @@ async function handleKusama() {
           }
           log(`Quote withdraw (${(withdrawType == 0)?"unused":"matched"}): ${ksmTx.recipient.toString()} withdarwing amount ${amountReturned.toString()}`, "START");
 
-          await sendTxAsync(api, admin, ksmTx.recipient, amountReturned.toString());
+          // Set status before handling (safety measure)
           await setOutgoingKusamaTransactionStatus(ksmTx.id, 1);
+          await sendTxAsync(api, admin, ksmTx.recipient, amountReturned.toString());
         }
         catch (e) {
           await setOutgoingKusamaTransactionStatus(ksmTx.id, 2, e.toString());
