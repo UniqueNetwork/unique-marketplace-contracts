@@ -173,7 +173,7 @@ async function addTrade(offerId, buyer) {
     [uuidv4(), publicKey, offerId]);
 }
 
-async function addOutgoingQuoteTransaction(quoteId, amount, recipient) {
+async function addOutgoingQuoteTransaction(quoteId, amount, recipient, withdrawType) {
   const conn = await getDbConnection();
 
   // Convert address into public key
@@ -181,9 +181,10 @@ async function addOutgoingQuoteTransaction(quoteId, amount, recipient) {
 
   // Id | Status | ErrorMessage | Value | QuoteId | RecipientPublicKey | WithdrawType
   // WithdrawType == 1 => Withdraw matched
+  //                 0 => Unused
   await conn.query(`INSERT INTO public."${outgoingQuoteTxTable}"("Id", "Status", "ErrorMessage", "Value", "QuoteId", "RecipientPublicKey", "WithdrawType") 
-    VALUES ($1, 0, '', $2, $3, $4, 1);`, 
-    [uuidv4(), amount, parseInt(quoteId), publicKey]);
+    VALUES ($1, 0, '', $2, $3, $4, $5);`, 
+    [uuidv4(), amount, parseInt(quoteId), publicKey, withdrawType]);
 }
 
 async function setIncomingKusamaTransactionStatus(id, status, error = "OK") {
@@ -339,6 +340,8 @@ async function scanNftBlock(api, admin, blockNum) {
   const signedBlock = await api.rpc.chain.getBlock(blockHash);
   const allRecords = await api.query.system.events.at(blockHash);
 
+  const abi = new Abi(contractAbi);
+
   // log(`Reading Block ${blockNum} Transactions`);
 
   // collect successful extrinsics
@@ -412,10 +415,10 @@ async function scanNftBlock(api, admin, blockNum) {
 
 
         // Ask call
-        if (data.includes("7d02ceb8")) {
+        if (data.includes("020f741e")) {
           log(`======== Ask Call`);
-          //    Ask ID   collection       token            quote            price
-          // 0x 7d02ceb8 0300000000000000 1200000000000000 0200000000000000 0080c6a47e8d03000000000000000000
+          //    CallID   collection       token            quote            price
+          // 0x 020f741e 0300000000000000 1200000000000000 0200000000000000 0080c6a47e8d03000000000000000000
           //    0        4                12               20               28
 
           if (data.substring(0,2) === "0x") data = data.substring(2);
@@ -433,32 +436,27 @@ async function scanNftBlock(api, admin, blockNum) {
         }
 
         // Buy call
-        if (data.includes("151e67be")) {
+        if (data.includes("15d62801")) {
           // We expect 4 events here with 
           // [1] being QuoteWithdrawMatched and 
           // [2] being NFTWithdraw 
+          log(`======== Buy call`);
 
-          log(`======== WithdrawNFT Event`);
-          const buyerAddress = encodeAddress(hexToU8a(allRecords[1].topics[3].toString()));
+          // WithdrawNFT
+          log(`--- Event 1: ${abi.decodeEvent(allRecords[1].event.data[1]).event.identifier}`);
+          const buyerAddress = abi.decodeEvent(allRecords[1].event.data[1]).args[0].toString();
           log(`NFT Buyer address: ${buyerAddress}`);
-          const tokenIdBN = beHexToNum(allRecords[1].topics[1].toString());
-          const tokenIdOffset = new BigNumber('0x200000000', 16);
-          const tokenId = tokenIdBN.minus(tokenIdOffset); 
-          log(`tokenId = ${tokenId}`);
-          const collectionIdBN = beHexToNum(allRecords[1].topics[0].toString());
-          const collectionIdOffset = new BigNumber('0x100000000', 16);
-          const collectionId = collectionIdBN.minus(collectionIdOffset); 
+          const collectionId = abi.decodeEvent(allRecords[1].event.data[1]).args[1].toString(); 
           log(`collectionId = ${collectionId}`);
+          const tokenId = abi.decodeEvent(allRecords[1].event.data[1]).args[2].toString(); 
+          log(`tokenId = ${tokenId}`);
           
-          log(`======== WithdrawUniqueMatched Event`);
-          const sellerAddress = encodeAddress(hexToU8a(allRecords[2].topics[2].toString()));
+          // WithdrawQuoteMatched
+          log(`--- Event 2: ${abi.decodeEvent(allRecords[2].event.data[1]).event.identifier}`);
+          const sellerAddress = abi.decodeEvent(allRecords[2].event.data[1]).args[0].toString();
           log(`NFT Seller address: ${sellerAddress}`);
-          const priceBN = beHexToNum(allRecords[2].topics[0].toString());
-          const priceOffset = new BigNumber('0x1000000000000000000000000000000', 16);
-          const price = priceBN.minus(priceOffset);
-          const quoteIdBN = beHexToNum(allRecords[2].topics[1].toString());
-          const quoteIdOffset = new BigNumber('0x100000000', 16);
-          const quoteId = quoteIdBN.minus(quoteIdOffset);
+          const quoteId = parseInt(abi.decodeEvent(allRecords[2].event.data[1]).args[1].toString());
+          const price = abi.decodeEvent(allRecords[2].event.data[1]).args[2].toString();
           log(`Price: ${quoteId} - ${price.toString()}`);
 
           // Update offer to done (status = 3 = Traded)
@@ -468,26 +466,26 @@ async function scanNftBlock(api, admin, blockNum) {
           await addTrade(id, buyerAddress);
 
           // Record outgoing quote tx
-          await addOutgoingQuoteTransaction(quoteId, price.toString(), sellerAddress);
+          await addOutgoingQuoteTransaction(quoteId, price.toString(), sellerAddress, 1);
 
           // Execute NFT transfer to buyer
           await sendNftTxAsync(api, admin, buyerAddress.toString(), parseInt(collectionId), parseInt(tokenId));
         }
 
-        // Cancel: 0x898fa41a03000000000000000100000000000000
-        if (data.includes("898fa41a")) {
+        // Cancel: 0x9796e9a703000000000000000100000000000000
+        if (data.includes("9796e9a7")) {
 
-          log(`======== Cancel call - WithdrawNFT Event`);
-          const sellerAddress = encodeAddress(hexToU8a(allRecords[1].topics[3].toString()));
+          log(`======== Cancel call`);
+
+          // WithdrawNFT
+          log(`--- Event 1: ${abi.decodeEvent(allRecords[1].event.data[1]).event.identifier}`);
+          const sellerAddress = abi.decodeEvent(allRecords[1].event.data[1]).args[0].toString();
           log(`NFT Seller address: ${sellerAddress}`);
-          const tokenIdBN = beHexToNum(allRecords[1].topics[1].toString());
-          const tokenIdOffset = new BigNumber('0x200000000', 16);
-          const tokenId = tokenIdBN.minus(tokenIdOffset); 
-          log(`tokenId = ${tokenId}`);
-          const collectionIdBN = beHexToNum(allRecords[1].topics[0].toString());
-          const collectionIdOffset = new BigNumber('0x100000000', 16);
-          const collectionId = collectionIdBN.minus(collectionIdOffset); 
+          const collectionId = abi.decodeEvent(allRecords[1].event.data[1]).args[1].toString(); 
           log(`collectionId = ${collectionId}`);
+          const tokenId = abi.decodeEvent(allRecords[1].event.data[1]).args[2].toString(); 
+          log(`tokenId = ${tokenId}`);
+
 
           // Update offer to calceled (status = 2 = Canceled)
           await updateOffer(collectionId, tokenId, 2);
@@ -495,6 +493,24 @@ async function scanNftBlock(api, admin, blockNum) {
           // Execute NFT transfer back to seller
           await sendNftTxAsync(api, admin, sellerAddress.toString(), parseInt(collectionId), parseInt(tokenId));
         }
+
+        // Withdraw: 0x410fcc9d020000000000000000407a10f35a00000000000000000000
+        if (data.includes("410fcc9d")) {
+
+          log(`======== Withdraw call`);
+
+          // WithdrawQuoteUnused
+          log(`--- Event 1: ${abi.decodeEvent(allRecords[1].event.data[1]).event.identifier}`);
+          const withdrawerAddress = abi.decodeEvent(allRecords[1].event.data[1]).args[0].toString();
+          log(`Withdrawing address: ${withdrawerAddress}`);
+          const quoteId = parseInt(abi.decodeEvent(allRecords[1].event.data[1]).args[1].toString());
+          const price = abi.decodeEvent(allRecords[1].event.data[1]).args[2].toString();
+          log(`Price: ${quoteId} - ${price.toString()}`);
+
+          // Record outgoing quote tx
+          await addOutgoingQuoteTransaction(quoteId, price.toString(), withdrawerAddress, 0);
+        }
+
       }
       catch (e) {
         log(e, "ERROR");
@@ -517,6 +533,9 @@ async function handleUnique() {
   const admin = keyring.addFromUri(config.adminSeed);
   adminAddress = admin.address.toString();
   log(`Escrow admin address: ${adminAddress}`);
+
+  // await scanNftBlock(api, admin, 415720);
+  // return;
 
   await subscribeToBlocks(api);
 
