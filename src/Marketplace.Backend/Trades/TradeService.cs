@@ -48,6 +48,16 @@ namespace Marketplace.Backend.Trades
 
         public async Task<IList<TradeDto>> Get(string seller)
         {
+            // Ensure that seller is a proper base64 encoded public key
+            try {
+                byte[] data = Convert.FromBase64String(seller);
+                if (data.Length != 32) seller = "invalid";
+            } catch (ArgumentNullException) {
+                seller = "invalid";
+            } catch (FormatException) {
+                seller = "invalid";
+            }
+
             return await _marketplaceDbContext
                 .Trades
                 .Where(t => t.Offer.Seller == seller)
