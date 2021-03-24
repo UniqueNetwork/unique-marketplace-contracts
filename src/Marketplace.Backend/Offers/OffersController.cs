@@ -23,12 +23,12 @@ namespace Marketplace.Backend.Offers
             return _offerService.Get();
         }
 
-        [HttpGet]
-        [Route("{collectionId}")]
-        public Task<IList<OfferDto>> Get(ulong collectionId)
-        {
-            return _offerService.Get(collectionId);
-        }
+        // [HttpGet]
+        // [Route("{collectionId}")]
+        // public Task<IList<OfferDto>> Get(ulong collectionId)
+        // {
+        //     return _offerService.Get(collectionId);
+        // }
 
         [HttpGet]
         [Route("{seller}")]
