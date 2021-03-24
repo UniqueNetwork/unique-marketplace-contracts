@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Marketplace.Db;
 using Marketplace.Db.Models;
 using Microsoft.EntityFrameworkCore;
+using Marketplace.Backend.Base58;
 
 namespace Marketplace.Backend.Trades
 {
@@ -48,15 +49,16 @@ namespace Marketplace.Backend.Trades
 
         public async Task<IList<TradeDto>> Get(string seller)
         {
-            // Ensure that seller is a proper base64 encoded public key
+            // Ensure that seller is a proper base58 encoded address
+            string base64Seller = "Invalid";
             try {
-                byte[] data = Convert.FromBase64String(seller);
-                if (data.Length != 32) seller = "invalid";
-            } catch (ArgumentNullException) {
-                seller = "invalid";
-            } catch (FormatException) {
-                seller = "invalid";
-            }
+                var pk = AddressEncoding.AddressToPublicKey("5Fj7qQR7f9uMNXTgj6bBJDKbaHbEnVb7c3tb881kchbDd82V");
+                base64Seller = Convert.ToBase64String(pk);
+            } 
+            catch (ArgumentNullException) {} 
+            catch (FormatException) {} 
+            catch (ArgumentOutOfRangeException) {}
+            catch (ArgumentException) {}
 
             return await _marketplaceDbContext
                 .Trades
@@ -69,3 +71,4 @@ namespace Marketplace.Backend.Trades
         }
     }
 }
+
