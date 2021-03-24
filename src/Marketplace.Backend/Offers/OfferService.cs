@@ -54,7 +54,7 @@ namespace Marketplace.Backend.Offers
             // Ensure that seller is a proper base58 encoded address
             string base64Seller = "Invalid";
             try {
-                var pk = AddressEncoding.AddressToPublicKey("5Fj7qQR7f9uMNXTgj6bBJDKbaHbEnVb7c3tb881kchbDd82V");
+                var pk = AddressEncoding.AddressToPublicKey(seller);
                 base64Seller = Convert.ToBase64String(pk);
             } 
             catch (ArgumentNullException) {} 
