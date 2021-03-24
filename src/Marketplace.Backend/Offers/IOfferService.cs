@@ -7,5 +7,6 @@ namespace Marketplace.Backend.Offers
     {
         Task<IList<OfferDto>> Get();
         Task<IList<OfferDto>> Get(ulong collectionId);
+        Task<IList<OfferDto>> Get(string seller);
     }
 }

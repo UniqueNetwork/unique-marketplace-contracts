@@ -45,5 +45,17 @@ namespace Marketplace.Backend.Trades
                 .Select(MapTrade())
                 .ToListAsync();
         }
+
+        public async Task<IList<TradeDto>> Get(string seller)
+        {
+            return await _marketplaceDbContext
+                .Trades
+                .Where(t => t.Offer.Seller == seller)
+                .OrderByDescending(t => t.TradeDate)
+                .AsNoTrackingWithIdentityResolution()
+                .Select(MapTrade())
+                .ToListAsync();
+
+        }
     }
 }

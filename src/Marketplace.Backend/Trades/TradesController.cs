@@ -30,5 +30,12 @@ namespace Marketplace.Backend.Trades
             return _tradeService.Get(collectionId);
         }
 
+        [HttpGet]
+        [Route("{seller}")]
+        public Task<IList<TradeDto>> Get(string seller)
+        {
+            return _tradeService.Get(seller);
+        }
+
     }
 }

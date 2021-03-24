@@ -47,5 +47,16 @@ namespace Marketplace.Backend.Offers
                 .Select(MapOfferDto())
                 .ToListAsync();
         }
+
+        public async Task<IList<OfferDto>> Get(string seller)
+        {
+            return await _marketplaceDbContext
+                .Offers
+                .Where(o => o.Seller == seller)
+                .OrderByDescending(o => o.CreationDate)
+                .AsNoTrackingWithIdentityResolution()
+                .Select(MapOfferDto())
+                .ToListAsync();
+        }
     }
 }
