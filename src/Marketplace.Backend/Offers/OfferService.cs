@@ -65,7 +65,7 @@ namespace Marketplace.Backend.Offers
 
             return await _marketplaceDbContext
                 .Offers
-                .Where(o => o.Seller == seller)
+                .Where(o => o.Seller == base64Seller)
                 .OrderByDescending(o => o.CreationDate)
                 .AsNoTrackingWithIdentityResolution()
                 .Select(MapOfferDto())

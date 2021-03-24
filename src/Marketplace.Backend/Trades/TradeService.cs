@@ -62,7 +62,7 @@ namespace Marketplace.Backend.Trades
 
             return await _marketplaceDbContext
                 .Trades
-                .Where(t => t.Offer.Seller == seller)
+                .Where(t => t.Offer.Seller == base64Seller)
                 .OrderByDescending(t => t.TradeDate)
                 .AsNoTrackingWithIdentityResolution()
                 .Select(MapTrade())
