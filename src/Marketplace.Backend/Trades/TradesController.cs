@@ -23,12 +23,12 @@ namespace Marketplace.Backend.Trades
             return _tradeService.Get();
         }
 
-        [HttpGet]
-        [Route("{collectionId}")]
-        public Task<IList<TradeDto>> Get(ulong collectionId)
-        {
-            return _tradeService.Get(collectionId);
-        }
+        // [HttpGet]
+        // [Route("{collectionId}")]
+        // public Task<IList<TradeDto>> Get(ulong collectionId)
+        // {
+        //     return _tradeService.Get(collectionId);
+        // }
 
         [HttpGet]
         [Route("{seller}")]
