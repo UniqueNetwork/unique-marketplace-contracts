@@ -61,6 +61,7 @@ namespace Marketplace.Backend.Offers
             catch (FormatException) {} 
             catch (ArgumentOutOfRangeException) {}
             catch (ArgumentException) {}
+            Console.WriteLine($"Converted {seller} to base64: {base64Seller}");
 
             return await _marketplaceDbContext
                 .Offers
