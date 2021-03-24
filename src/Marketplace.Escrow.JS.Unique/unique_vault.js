@@ -364,31 +364,21 @@ async function scanNftBlock(api, admin, blockNum) {
     const { _isSigned, _meta, method: { args, method, section } } = ex;
 
     if ((section == "nft") && (method == "transfer") && (args[0] == admin.address.toString())) {
+      log(`NFT deposit from ${ex.signer.toString()} id (${args[1]}, ${args[2]})`, "RECEIVED");
 
-      // Check that transfer was actually successful:
-      let { Owner } = await api.query.nft.nftItemList(args[1], args[2]);
-      if (Owner == admin.address.toString()) {
-        log(`NFT deposit from ${ex.signer.toString()} id (${args[1]}, ${args[2]})`, "RECEIVED");
-  
-        // Register NFT Deposit
-        const deposit = {
-          address: ex.signer.toString(),
-          collectionId: args[1],
-          tokenId: args[2]
-        };
+      // Register NFT Deposit
+      const deposit = {
+        address: ex.signer.toString(),
+        collectionId: args[1],
+        tokenId: args[2]
+      };
 
-        try {
-          await registerNftDepositAsync(api, admin, deposit.address, deposit.collectionId, deposit.tokenId, blockNum);
-          log(`NFT deposit from ${deposit.address} id (${deposit.collectionId}, ${deposit.tokenId})`, "REGISTERED");
-        } catch (e) {
-          log(`NFT deposit from ${deposit.address} id (${deposit.collectionId}, ${deposit.tokenId})`, "FAILED TO REGISTER");
-        }
-
+      try {
+        await registerNftDepositAsync(api, admin, deposit.address, deposit.collectionId, deposit.tokenId, blockNum);
+        log(`NFT deposit from ${deposit.address} id (${deposit.collectionId}, ${deposit.tokenId})`, "REGISTERED");
+      } catch (e) {
+        log(`NFT deposit from ${deposit.address} id (${deposit.collectionId}, ${deposit.tokenId})`, "FAILED TO REGISTER");
       }
-      else {
-        log(`NFT deposit from ${ex.signer.toString()} id (${args[1]}, ${args[2]})`, "FAILED TX");
-      }
-
     }
     else if ((section == "contracts") && (method == "call") && (args[0].toString() == config.marketContractAddress)) {
       try {
