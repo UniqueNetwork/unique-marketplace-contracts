@@ -46,13 +46,13 @@ namespace Marketplace.Backend.Trades
                 .ToListAsync();
         }
 
-        public async Task<PaginationResult<TradeDto>> Get(string seller, PaginationParameter parameter)
+        public async Task<PaginationResult<TradeDto>> Get(string address, PaginationParameter parameter)
         {
-            // Ensure that seller is a proper base58 encoded address
-            string base64Seller = "Invalid";
+            // Ensure that address is a proper base58 encoded address
+            string base64Address = "Invalid";
             try {
-                var pk = AddressEncoding.AddressToPublicKey(seller);
-                base64Seller = Convert.ToBase64String(pk);
+                var pk = AddressEncoding.AddressToPublicKey(address);
+                base64Address = Convert.ToBase64String(pk);
             } 
             catch (ArgumentNullException) {} 
             catch (FormatException) {} 
@@ -61,7 +61,7 @@ namespace Marketplace.Backend.Trades
 
             return await _marketplaceDbContext
                 .Trades
-                .Where(t => t.Offer.Seller == base64Seller)
+                .Where(t => (t.Offer.Seller == base64Address) || (t.Buyer == base64Address))
                 .OrderByDescending(t => t.TradeDate)
                 .AsNoTrackingWithIdentityResolution()
                 .Select(MapTrade())
