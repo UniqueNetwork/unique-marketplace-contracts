@@ -201,39 +201,7 @@ function getGenericResult(events) {
   return result;
 }
 
-function sendTxAsync(api, sender, recipient, amount) {
-
-  // Check is amount commission is big enough to pay transaction fee. If not, return the amount + commission - tx fee.
-  let amountBN = new BigNumber(amount);
-  let marketFee = amountBN.dividedBy(51.001); // We received 102% of price, so the fee is 2/102 = 1/51 (+0.001 for rounding errors)
-  const totalBalance = (await api.query.system.account(sender.address)).data.free;
-
-  let balanceTransaction;
-  let feesSatisfied = false;
-  while (!feesSatisfied) {
-    balanceTransaction = api.tx.balances.transfer(recipient, amountBN.toString());
-    const info = balanceTransaction.paymentInfo(sender);
-    const networkFee = info.partialFee;
-  
-    if (networkFee.isGreaterThan(marketFee)) {
-      amountBN = amountBN.plus(marketFee).minus(networkFee);
-      log(`Market fee ${marketFee.toString()} is insufficient to pay network fee of ${networkFee.toString()}. Will only send ${amountBN.toString()}`);
-    }
-    // Check that total escrow balance is enough to send this amount
-    else if (totalBalance.isLessThan(amountBN)) {
-      log(`Escrow balance ${totalBalance.toString()} is insufficient to send ${amountBN.toString()}. Will only send ${totalBalance.minus(networkFee).toString()}.`);
-      amountBN = totalBalance.minus(networkFee);
-      balanceTransaction = api.tx.balances.transfer(recipient, amountBN.toString());
-    }
-    else feesSatisfied = true;
-
-    if (amountBN.isLessThan(0)) {
-      log(`Withdraw is too small. Will not process.`);
-      throw "Withdraw is too small";
-    }
-  }
-
-  
+function sendTxAsync(sender, balanceTransaction) {
   return new Promise(async function(resolve, reject) {
     try {
       const unsub = await balanceTransaction
@@ -269,6 +237,42 @@ function sendTxAsync(api, sender, recipient, amount) {
       reject(e);
     }
   });
+}
+
+async function withdrawAsync(api, sender, recipient, amount) {
+
+  // Check is amount commission is big enough to pay transaction fee. If not, return the amount + commission - tx fee.
+  let amountBN = new BigNumber(amount);
+  let marketFee = amountBN.dividedBy(51.001); // We received 102% of price, so the fee is 2/102 = 1/51 (+0.001 for rounding errors)
+  const totalBalanceObj = await api.query.system.account(sender.address)
+  const totalBalance = totalBalanceObj.data.free;
+
+  let balanceTransaction;
+  let feesSatisfied = false;
+  while (!feesSatisfied) {
+    balanceTransaction = api.tx.balances.transfer(recipient, amountBN.toString());
+    const info = balanceTransaction.paymentInfo(sender);
+    const networkFee = info.partialFee;
+  
+    if (networkFee.isGreaterThan(marketFee)) {
+      amountBN = amountBN.plus(marketFee).minus(networkFee);
+      log(`Market fee ${marketFee.toString()} is insufficient to pay network fee of ${networkFee.toString()}. Will only send ${amountBN.toString()}`);
+    }
+    // Check that total escrow balance is enough to send this amount
+    else if (totalBalance.isLessThan(amountBN)) {
+      log(`Escrow balance ${totalBalance.toString()} is insufficient to send ${amountBN.toString()}. Will only send ${totalBalance.minus(networkFee).toString()}.`);
+      amountBN = totalBalance.minus(networkFee);
+      balanceTransaction = api.tx.balances.transfer(recipient, amountBN.toString());
+    }
+    else feesSatisfied = true;
+
+    if (amountBN.isLessThan(0)) {
+      log(`Withdraw is too small. Will not process.`);
+      throw "Withdraw is too small";
+    }
+  }
+
+  await sendTxAsync(sender, balanceTransaction);
 }
 
 async function handleKusama() {
@@ -328,7 +332,7 @@ async function handleKusama() {
 
           // Set status before handling (safety measure)
           await setOutgoingKusamaTransactionStatus(ksmTx.id, 1);
-          await sendTxAsync(api, admin, ksmTx.recipient, amountReturned.toString());
+          await withdrawAsync(api, admin, ksmTx.recipient, amountReturned.toString());
         }
         catch (e) {
           await setOutgoingKusamaTransactionStatus(ksmTx.id, 2, e);
