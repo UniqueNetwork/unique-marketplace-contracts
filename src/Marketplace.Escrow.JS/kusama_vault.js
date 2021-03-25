@@ -269,7 +269,7 @@ async function withdrawAsync(api, sender, recipient, amount) {
       console.log("=== debug 3");
     }
     // Check that total escrow balance is enough to send this amount
-    if (totalBalance.isLessThan(amountBN)) {
+    if (feesSatisfied && (totalBalance.minus(marketFee).isLessThan(amountBN))) {
       console.log("=== debug 4");
       log(`Escrow balance ${totalBalance.toString()} is insufficient to send ${amountBN.toString()}. Will only send ${totalBalance.minus(networkFee).toString()}.`);
       console.log("=== debug 5");
