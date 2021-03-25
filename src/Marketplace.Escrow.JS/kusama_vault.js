@@ -189,51 +189,43 @@ async function scanKusamaBlock(api, blockNum) {
 
 }
 
-function getGenericResult(events) {
-  const result = {
-    success: false,
-  };
-  events.forEach(({ _phase, event: { _data, method, _section } }) => {
-    if (method === 'ExtrinsicSuccess') {
-      result.success = true;
+function getTransactionStatus(events, status) {
+  if (status.isReady) {
+    return "NotReady";
+  }
+  if (status.isBroadcast) {
+    return "NotReady";
+  } 
+  if (status.isInBlock || status.isFinalized) {
+    if(events.filter(e => e.event.data.method === 'ExtrinsicFailed').length > 0) {
+      return "Fail";
     }
-  });
-  return result;
+    if(events.filter(e => e.event.data.method === 'ExtrinsicSuccess').length > 0) {
+      return "Success";
+    }
+  }
+
+  return "Fail";
 }
 
-function sendTxAsync(sender, balanceTransaction) {
-  return new Promise(async function(resolve, reject) {
+function sendTxAsync(sender, transaction) {
+  return new Promise(async (resolve, reject) => {
     try {
-      const unsub = await balanceTransaction
-        .signAndSend(sender, ({ events = [], status }) => {
-    
-          if (status == 'Ready') {
-            // nothing to do
-            // log(`Current tx status is Ready`);
-          }
-          else if (JSON.parse(status).Broadcast) {
-            // nothing to do
-            // log(`Current tx status is Broadcast`);
-          }
-          else if ((status.isInBlock) || (status.isFinalized)) {
-            const result = getGenericResult(events);
-            if (result.success) {
-              log(`Transaction included at blockHash ${(status.isInBlock) ? status.asInBlock : status.asFinalized} - SUCCESS`);
-              resolve();
-            }
-            else {
-              log(`Transaction included at blockHash ${(status.isInBlock) ? status.asInBlock : status.asFinalized} - FAILED`);
-              reject();
-            }
-            unsub();
-          } else {
-            log(`Quote qithdraw`, `ERROR: ${status}`);
-            reject();
-            unsub();
-          }
-        });
+      let unsub = await transaction.signAndSend(sender, ({ events = [], status }) => {
+        const transactionStatus = getTransactionStatus(events, status);
+
+        if (transactionStatus === "Success") {
+          log(`Transaction successful`);
+          resolve(events);
+          unsub();
+        } else if (transactionStatus === "Fail") {
+          log(`Something went wrong with transaction. Status: ${status}`);
+          reject(events);
+          unsub();
+        }
+      });
     } catch (e) {
-      log(`Quote withdraw`, `ERROR: ${e.toString()}`);
+      log('Error: ' + e.toString(), "ERROR");
       reject(e);
     }
   });
@@ -260,23 +252,16 @@ async function withdrawAsync(api, sender, recipient, amount) {
     log(`networkFee = ${networkFee.toString()}`);
   
     feesSatisfied = true;
-    console.log("=== debug 0");
     if (networkFee.isGreaterThan(marketFee.plus(additionalMarketFee))) {
-      console.log("=== debug 1");
       additionalMarketFee = networkFee.minus(marketFee);
       amountBN = amountBN.minus(additionalMarketFee);
-      console.log("=== debug 2");
       log(`Market fee ${marketFee.toString()} is insufficient to pay network fee of ${networkFee.toString()}. Will only send ${amountBN.toString()}`);
       feesSatisfied = false;
-      console.log("=== debug 3");
     }
     // Check that total escrow balance is enough to send this amount
     if (totalBalance.minus(marketFee).isLessThan(amountBN)) {
-      console.log("=== debug 4");
       log(`Escrow balance ${totalBalance.toString()} is insufficient to send ${amountBN.toString()}. Will only send ${totalBalance.minus(networkFee).toString()}.`);
-      console.log("=== debug 5");
       amountBN = totalBalance.minus(networkFee);
-      console.log("=== debug 6");
       feesSatisfied = false;
     }
 
