@@ -243,7 +243,7 @@ async function withdrawAsync(api, sender, recipient, amount) {
 
   // Check is amount commission is big enough to pay transaction fee. If not, return the amount + commission - tx fee.
   let amountBN = new BigNumber(amount);
-  let marketFee = amountBN.dividedBy(51.001); // We received 102% of price, so the fee is 2/102 = 1/51 (+0.001 for rounding errors)
+  let marketFee = amountBN.dividedBy(51.001).integerValue(BigNumber.ROUND_DOWN); // We received 102% of price, so the fee is 2/102 = 1/51 (+0.001 for rounding errors)
   const totalBalanceObj = await api.query.system.account(sender.address)
   const totalBalance = totalBalanceObj.data.free;
   log(`amountBN = ${amountBN.toString()}`);
@@ -255,6 +255,7 @@ async function withdrawAsync(api, sender, recipient, amount) {
   while (!feesSatisfied) {
     balanceTransaction = api.tx.balances.transfer(recipient, amountBN.toString());
     const info = balanceTransaction.paymentInfo(sender);
+    console.log(info);
     const networkFee = info.partialFee;
     log(`networkFee = ${networkFee.toString()}`);
   
@@ -340,7 +341,6 @@ async function handleKusama() {
         }
         catch (e) {
           await setOutgoingKusamaTransactionStatus(ksmTx.id, 2, e);
-          log(`Quote withdraw error: ${e}`);
         }
         finally {
           log(`Quote withdraw: ${ksmTx.recipient.toString()} withdarwing amount ${ksmTx.amount}`, "END");
