@@ -226,7 +226,13 @@ function sendTxAsync(api, sender, recipient, amount) {
       balanceTransaction = api.tx.balances.transfer(recipient, amountBN.toString());
     }
     else feesSatisfied = true;
+
+    if (amountBN.isLessThan(0)) {
+      log(`Withdraw is too small. Will not process.`);
+      throw "Withdraw is too small";
+    }
   }
+
   
   return new Promise(async function(resolve, reject) {
     try {
