@@ -258,21 +258,23 @@ async function withdrawAsync(api, sender, recipient, amount) {
     const networkFee = info.partialFee;
     log(`networkFee = ${networkFee.toString()}`);
   
+    feesSatisfied = true;
     if (networkFee.isGreaterThan(marketFee)) {
       amountBN = amountBN.plus(marketFee).minus(networkFee);
       log(`Market fee ${marketFee.toString()} is insufficient to pay network fee of ${networkFee.toString()}. Will only send ${amountBN.toString()}`);
+      feesSatisfied = false;
     }
     // Check that total escrow balance is enough to send this amount
-    else if (totalBalance.isLessThan(amountBN)) {
+    if (totalBalance.isLessThan(amountBN)) {
       log(`Escrow balance ${totalBalance.toString()} is insufficient to send ${amountBN.toString()}. Will only send ${totalBalance.minus(networkFee).toString()}.`);
       amountBN = totalBalance.minus(networkFee);
       balanceTransaction = api.tx.balances.transfer(recipient, amountBN.toString());
+      feesSatisfied = false;
     }
-    else feesSatisfied = true;
 
     if (amountBN.isLessThan(0)) {
       log(`Withdraw is too small. Will not process.`);
-      throw "Withdraw is too small";
+      throw "Withdrawal is too small";
     }
   }
 
@@ -357,3 +359,4 @@ async function main() {
 }
 
 main().catch(console.error).finally(() => process.exit());
+
