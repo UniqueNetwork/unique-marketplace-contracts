@@ -246,6 +246,9 @@ async function withdrawAsync(api, sender, recipient, amount) {
   let marketFee = amountBN.dividedBy(51.001); // We received 102% of price, so the fee is 2/102 = 1/51 (+0.001 for rounding errors)
   const totalBalanceObj = await api.query.system.account(sender.address)
   const totalBalance = totalBalanceObj.data.free;
+  log(`amountBN = ${amountBN.toString()}`);
+  log(`Market fee = ${marketFee.toString()}`);
+  log(`Total escrow balance = ${totalBalance.toString()}`);
 
   let balanceTransaction;
   let feesSatisfied = false;
@@ -253,6 +256,7 @@ async function withdrawAsync(api, sender, recipient, amount) {
     balanceTransaction = api.tx.balances.transfer(recipient, amountBN.toString());
     const info = balanceTransaction.paymentInfo(sender);
     const networkFee = info.partialFee;
+    log(`networkFee = ${networkFee.toString()}`);
   
     if (networkFee.isGreaterThan(marketFee)) {
       amountBN = amountBN.plus(marketFee).minus(networkFee);
