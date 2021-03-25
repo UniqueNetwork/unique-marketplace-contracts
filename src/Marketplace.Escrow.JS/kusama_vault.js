@@ -245,7 +245,7 @@ async function withdrawAsync(api, sender, recipient, amount) {
   let amountBN = new BigNumber(amount);
   let marketFee = amountBN.dividedBy(51.001).integerValue(BigNumber.ROUND_DOWN); // We received 102% of price, so the fee is 2/102 = 1/51 (+0.001 for rounding errors)
   const totalBalanceObj = await api.query.system.account(sender.address)
-  const totalBalance = totalBalanceObj.data.free;
+  const totalBalance = new BigNumber(totalBalanceObj.data.free);
   log(`amountBN = ${amountBN.toString()}`);
   log(`Market fee = ${marketFee.toString()}`);
   log(`Total escrow balance = ${totalBalance.toString()}`);
@@ -269,7 +269,7 @@ async function withdrawAsync(api, sender, recipient, amount) {
       console.log("=== debug 3");
     }
     // Check that total escrow balance is enough to send this amount
-    if (feesSatisfied && (totalBalance.minus(marketFee).isLessThan(amountBN))) {
+    if (totalBalance.minus(marketFee).isLessThan(amountBN)) {
       console.log("=== debug 4");
       log(`Escrow balance ${totalBalance.toString()} is insufficient to send ${amountBN.toString()}. Will only send ${totalBalance.minus(networkFee).toString()}.`);
       console.log("=== debug 5");
