@@ -259,6 +259,7 @@ async function withdrawAsync(api, sender, recipient, amount) {
     log(`networkFee = ${networkFee.toString()}`);
   
     feesSatisfied = true;
+    console.log("=== debug 0");
     if (networkFee.isGreaterThan(marketFee)) {
       console.log("=== debug 1");
       amountBN = amountBN.plus(marketFee).minus(networkFee);
