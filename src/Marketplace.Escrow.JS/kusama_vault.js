@@ -249,6 +249,7 @@ async function withdrawAsync(api, sender, recipient, amount) {
   log(`amountBN = ${amountBN.toString()}`);
   log(`Market fee = ${marketFee.toString()}`);
   log(`Total escrow balance = ${totalBalance.toString()}`);
+  let additionalMarketFee = new BigNumber(0); // in case if marketFee is insufficient
 
   let balanceTransaction;
   let feesSatisfied = false;
@@ -260,9 +261,10 @@ async function withdrawAsync(api, sender, recipient, amount) {
   
     feesSatisfied = true;
     console.log("=== debug 0");
-    if (networkFee.isGreaterThan(marketFee)) {
+    if (networkFee.isGreaterThan(marketFee.plus(additionalMarketFee))) {
       console.log("=== debug 1");
-      amountBN = amountBN.plus(marketFee).minus(networkFee);
+      additionalMarketFee = networkFee.minus(marketFee);
+      amountBN = amountBN.minus(additionalMarketFee);
       console.log("=== debug 2");
       log(`Market fee ${marketFee.toString()} is insufficient to pay network fee of ${networkFee.toString()}. Will only send ${amountBN.toString()}`);
       feesSatisfied = false;
@@ -275,8 +277,6 @@ async function withdrawAsync(api, sender, recipient, amount) {
       console.log("=== debug 5");
       amountBN = totalBalance.minus(networkFee);
       console.log("=== debug 6");
-      balanceTransaction = api.tx.balances.transfer(recipient, amountBN.toString());
-      console.log("=== debug 7");
       feesSatisfied = false;
     }
 
