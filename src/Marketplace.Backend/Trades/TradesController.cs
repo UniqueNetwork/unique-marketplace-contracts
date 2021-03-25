@@ -32,7 +32,7 @@ namespace Marketplace.Backend.Trades
 
         [HttpGet]
         [Route("{seller}")]
-        public Task<PaginationResult<TradeDto>> Get(string seller, PaginationParameter parameter)
+        public Task<PaginationResult<TradeDto>> Get(string seller, [FromQuery] PaginationParameter parameter)
         {
             return _tradeService.Get(seller, parameter);
         }
