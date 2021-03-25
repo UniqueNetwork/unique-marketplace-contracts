@@ -243,7 +243,8 @@ function sendTxAsync(api, sender, recipient, amount) {
 async function handleKusama() {
 
   const api = await getKusamaConnection();
-  const keyring = new Keyring({ type: 'sr25519' });
+  const keyring = new Keyring({ type: 'sr25519', addressPrefix: 2 });
+  keyring.setSS58Format(2);
   const admin = keyring.addFromUri(config.adminSeed);
   adminAddress = admin.address.toString();
   log(`Escrow admin address: ${adminAddress}`);
