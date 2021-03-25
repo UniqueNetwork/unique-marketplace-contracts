@@ -340,6 +340,7 @@ async function handleKusama() {
         }
         catch (e) {
           await setOutgoingKusamaTransactionStatus(ksmTx.id, 2, e);
+          log(`Quote withdraw error: ${e}`);
         }
         finally {
           log(`Quote withdraw: ${ksmTx.recipient.toString()} withdarwing amount ${ksmTx.amount}`, "END");
