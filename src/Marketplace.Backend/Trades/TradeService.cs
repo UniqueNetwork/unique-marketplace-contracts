@@ -19,15 +19,14 @@ namespace Marketplace.Backend.Trades
             _marketplaceDbContext = marketplaceDbContext;
         }
 
-        public async Task<IList<TradeDto>> Get()
+        public async Task<PaginationResult<TradeDto>> Get(PaginationParameter parameter)
         {
             return await _marketplaceDbContext
                 .Trades
                 .OrderByDescending(t => t.TradeDate)
                 .AsNoTrackingWithIdentityResolution()
                 .Select(MapTrade())
-                .ToListAsync();
-
+                .PaginateAsync(parameter);
         }
 
         private static Expression<Func<Trade, TradeDto>> MapTrade()
@@ -47,7 +46,7 @@ namespace Marketplace.Backend.Trades
                 .ToListAsync();
         }
 
-        public async Task<IList<TradeDto>> Get(string seller)
+        public async Task<PaginationResult<TradeDto>> Get(string seller, PaginationParameter parameter)
         {
             // Ensure that seller is a proper base58 encoded address
             string base64Seller = "Invalid";
@@ -66,8 +65,7 @@ namespace Marketplace.Backend.Trades
                 .OrderByDescending(t => t.TradeDate)
                 .AsNoTrackingWithIdentityResolution()
                 .Select(MapTrade())
-                .ToListAsync();
-
+                .PaginateAsync(parameter);
         }
     }
 }

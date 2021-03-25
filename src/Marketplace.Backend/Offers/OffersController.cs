@@ -18,9 +18,9 @@ namespace Marketplace.Backend.Offers
 
         [HttpGet]
         [Route("")]
-        public Task<IList<OfferDto>> Get()
+        public Task<PaginationResult<OfferDto>> Get([FromQuery] PaginationParameter paginationParameter)
         {
-            return _offerService.Get();
+            return _offerService.Get(paginationParameter);
         }
 
         // [HttpGet]
@@ -32,9 +32,9 @@ namespace Marketplace.Backend.Offers
 
         [HttpGet]
         [Route("{seller}")]
-        public Task<IList<OfferDto>> Get(string seller)
+        public Task<PaginationResult<OfferDto>> Get(string seller, [FromQuery] PaginationParameter paginationParameter)
         {
-            return _offerService.Get(seller);
+            return _offerService.Get(seller, paginationParameter);
         }
     }
 }

@@ -5,8 +5,8 @@ namespace Marketplace.Backend.Offers
 {
     public interface IOfferService
     {
-        Task<IList<OfferDto>> Get();
+        Task<PaginationResult<OfferDto>> Get(PaginationParameter parameter);
         Task<IList<OfferDto>> Get(ulong collectionId);
-        Task<IList<OfferDto>> Get(string seller);
+        Task<PaginationResult<OfferDto>> Get(string seller, PaginationParameter parameter);
     }
 }

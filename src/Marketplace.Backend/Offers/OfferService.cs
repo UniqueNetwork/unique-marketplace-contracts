@@ -22,7 +22,7 @@ namespace Marketplace.Backend.Offers
         }
 
 
-        public async Task<IList<OfferDto>> Get()
+        public async Task<PaginationResult<OfferDto>> Get(PaginationParameter parameter)
         {
             return await _marketplaceDbContext
                 .Offers
@@ -30,7 +30,7 @@ namespace Marketplace.Backend.Offers
                 .Take(_configuration.DefaultRequestLimit)
                 .AsNoTrackingWithIdentityResolution()
                 .Select(MapOfferDto())
-                .ToListAsync();
+                .PaginateAsync(parameter);
         }
 
         private static Expression<Func<Offer, OfferDto>> MapOfferDto()
@@ -49,7 +49,7 @@ namespace Marketplace.Backend.Offers
                 .ToListAsync();
         }
 
-        public async Task<IList<OfferDto>> Get(string seller)
+        public async Task<PaginationResult<OfferDto>> Get(string seller, PaginationParameter paginationParameter)
         {
             // Ensure that seller is a proper base58 encoded address
             string base64Seller = "Invalid";
@@ -69,7 +69,7 @@ namespace Marketplace.Backend.Offers
                 .OrderByDescending(o => o.CreationDate)
                 .AsNoTrackingWithIdentityResolution()
                 .Select(MapOfferDto())
-                .ToListAsync();
+                .PaginateAsync(paginationParameter);
         }
     }
 }
