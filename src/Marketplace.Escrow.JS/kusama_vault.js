@@ -255,7 +255,7 @@ async function withdrawAsync(api, sender, recipient, amount) {
   while (!feesSatisfied) {
     balanceTransaction = api.tx.balances.transfer(recipient, amountBN.toString());
     const info = await balanceTransaction.paymentInfo(sender);
-    const networkFee = info.partialFee;
+    const networkFee = new BigNumber(info.partialFee);
     log(`networkFee = ${networkFee.toString()}`);
   
     feesSatisfied = true;
