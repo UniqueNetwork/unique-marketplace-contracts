@@ -202,10 +202,36 @@ function getGenericResult(events) {
 }
 
 function sendTxAsync(api, sender, recipient, amount) {
+
+  // Check is amount commission is big enough to pay transaction fee. If not, return the amount + commission - tx fee.
+  let amountBN = new BigNumber(amount);
+  let marketFee = amountBN.dividedBy(51.001); // We received 102% of price, so the fee is 2/102 = 1/51 (+0.001 for rounding errors)
+
+  let balanceTransaction;
+  let feesSatisfied = false;
+  while (!feesSatisfied) {
+    balanceTransaction = api.tx.balances.transfer(recipient, amountBN.toString());
+    const info = balanceTransaction.paymentInfo(sender);
+    const networkFee = info.partialFee;
+  
+    if (networkFee.isGreaterThan(marketFee)) {
+      amountBN = amountBN.plus(marketFee).minus(networkFee);
+      log(`Market fee ${marketFee.toString()} is insufficient to pay network fee of ${networkFee.toString()}. Will only send ${amountBN.toString()}`);
+    }
+    else feesSatisfied = true;
+  }
+
+  // Check that total escrow balance is enough to send this amount
+  const totalBalance = (await api.query.system.account(sender.address)).data.free;
+  if (totalBalance.isLessThan(amountBN)) {
+    log(`Escrow balance ${totalBalance.toString()} is insufficient to send ${amountBN.toString()}. Will only send total balance.`);
+    amountBN = totalBalance;
+    balanceTransaction = api.tx.balances.transfer(recipient, amountBN.toString());
+  }
+  
   return new Promise(async function(resolve, reject) {
     try {
-      const unsub = await api.tx.balances
-        .transfer(recipient, amount)
+      const unsub = await balanceTransaction
         .signAndSend(sender, ({ events = [], status }) => {
     
           if (status == 'Ready') {
@@ -300,7 +326,7 @@ async function handleKusama() {
           await sendTxAsync(api, admin, ksmTx.recipient, amountReturned.toString());
         }
         catch (e) {
-          await setOutgoingKusamaTransactionStatus(ksmTx.id, 2, e.toString());
+          await setOutgoingKusamaTransactionStatus(ksmTx.id, 2, e);
         }
         finally {
           log(`Quote withdraw: ${ksmTx.recipient.toString()} withdarwing amount ${ksmTx.amount}`, "END");
