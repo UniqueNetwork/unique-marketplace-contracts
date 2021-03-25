@@ -21,13 +21,12 @@ namespace Marketplace.Backend.Offers
             _configuration = configuration;
         }
 
-
         public async Task<PaginationResult<OfferDto>> Get(PaginationParameter parameter)
         {
             return await _marketplaceDbContext
                 .Offers
+                .Where(o => o.OfferStatus == OfferStatus.Active)
                 .OrderByDescending(o => o.CreationDate)
-                .Take(_configuration.DefaultRequestLimit)
                 .AsNoTrackingWithIdentityResolution()
                 .Select(MapOfferDto())
                 .PaginateAsync(parameter);
@@ -42,7 +41,7 @@ namespace Marketplace.Backend.Offers
         {
             return await _marketplaceDbContext
                 .Offers
-                .Where(o => o.CollectionId == collectionId)
+                .Where(o => o.CollectionId == collectionId && o.OfferStatus == OfferStatus.Active)
                 .OrderByDescending(o => o.CreationDate)
                 .AsNoTrackingWithIdentityResolution()
                 .Select(MapOfferDto())
@@ -65,7 +64,7 @@ namespace Marketplace.Backend.Offers
 
             return await _marketplaceDbContext
                 .Offers
-                .Where(o => o.Seller == base64Seller)
+                .Where(o => o.Seller == base64Seller && o.OfferStatus == OfferStatus.Active)
                 .OrderByDescending(o => o.CreationDate)
                 .AsNoTrackingWithIdentityResolution()
                 .Select(MapOfferDto())
