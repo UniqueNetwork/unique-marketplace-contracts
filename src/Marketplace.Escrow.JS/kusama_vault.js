@@ -231,11 +231,11 @@ function sendTxAsync(sender, transaction) {
   });
 }
 
-async function withdrawAsync(api, sender, recipient, amount) {
+async function withdrawAsync(api, sender, recipient, amount, withdrawType) {
 
-  // Check is amount commission is big enough to pay transaction fee. If not, return the amount + commission - tx fee.
+  // Check if market commission is big enough to pay transaction fee. If not, return the amount + commission - tx fee.
   let amountBN = new BigNumber(amount);
-  let marketFee = amountBN.dividedBy(51.001).integerValue(BigNumber.ROUND_DOWN); // We received 102% of price, so the fee is 2/102 = 1/51 (+0.001 for rounding errors)
+  let marketFee = (withdrawType == 0) ? new BigNumber(0) : amountBN.dividedBy(51.001).integerValue(BigNumber.ROUND_DOWN); // We received 102% of price, so the fee is 2/102 = 1/51 (+0.001 for rounding errors)
   const totalBalanceObj = await api.query.system.account(sender.address)
   const totalBalance = new BigNumber(totalBalanceObj.data.free);
   log(`amountBN = ${amountBN.toString()}`);
@@ -322,16 +322,14 @@ async function handleKusama() {
           let amountReturned = amountBN;
           if (withdrawType == 0) {
             // Withdraw unused => return commission
-
-            // Add 2% fee to the returned amount less Kusama network fee of 0.003 KSM
-            const networkFee = 0.003;
-            amountReturned = amountBN.multipliedBy(51.001).dividedBy(50.001).minus(networkFee);
+            // Add 2% fee to the returned amount
+            amountReturned = amountBN.multipliedBy(51.001).dividedBy(50.001).integerValue(BigNumber.ROUND_DOWN);
           }
           log(`Quote withdraw (${(withdrawType == 0)?"unused":"matched"}): ${ksmTx.recipient.toString()} withdarwing amount ${amountReturned.toString()}`, "START");
 
           // Set status before handling (safety measure)
           await setOutgoingKusamaTransactionStatus(ksmTx.id, 1);
-          await withdrawAsync(api, admin, ksmTx.recipient, amountReturned.toString());
+          await withdrawAsync(api, admin, ksmTx.recipient, amountReturned.toString(), withdrawType);
         }
         catch (e) {
           await setOutgoingKusamaTransactionStatus(ksmTx.id, 2, e);
