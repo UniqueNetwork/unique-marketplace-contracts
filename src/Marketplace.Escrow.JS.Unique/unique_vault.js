@@ -158,14 +158,11 @@ async function getIncomingNFTTransaction() {
   };
 
   if (res.rows.length > 0) {
-    let publicKey = res.rows[0].OwnerPublicKey;
+    let publicKey = Buffer.from(res.rows[0].OwnerPublicKey, 'base64');
 
     try {
-      if ((publicKey[0] != '0') || (publicKey[1] != 'x'))
-        publicKey = '0x' + publicKey;
-
       // Convert public key into address
-      const address = encodeAddress(hexToU8a(publicKey));
+      const address = encodeAddress(publicKey);
 
       nftTx.id = res.rows[0].Id;
       nftTx.collectionId = res.rows[0].CollectionId;
