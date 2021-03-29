@@ -132,6 +132,56 @@ async function addIncomingNFTTransaction(address, collectionId, tokenId, blockNu
     [uuidv4(), collectionId, tokenId, publicKey, blockNumber]);
 }
 
+async function setIncomingNftTransactionStatus(id, status, error = "OK") {
+  const conn = await getDbConnection();
+
+  // Get one non-processed Kusama transaction
+  await conn.query(`UPDATE public."${incomingTxTable}" SET "Status" = $1, "ErrorMessage" = $2 WHERE "Id" = $3`, 
+    [status, error, id]);
+}
+
+async function getIncomingNFTTransaction() {
+  const conn = await getDbConnection();
+
+  // Get one non-processed incoming NFT transaction
+  // Id | CollectionId | TokenId | Value | OwnerPublicKey | Status | LockTime | ErrorMessage | UniqueProcessedBlockId  
+  const res = await conn.query(`SELECT * FROM public."${incomingTxTable}" 
+    WHERE 
+      "Status" = 0 
+  `);
+
+  let nftTx = {
+    id: '',
+    collectionId: 0,
+    tokenId: 0,
+    sender: null
+  };
+
+  if (res.rows.length > 0) {
+    let publicKey = res.rows[0].OwnerPublicKey;
+
+    try {
+      if ((publicKey[0] != '0') || (publicKey[1] != 'x'))
+        publicKey = '0x' + publicKey;
+
+      // Convert public key into address
+      const address = encodeAddress(hexToU8a(publicKey));
+
+      nftTx.id = res.rows[0].Id;
+      nftTx.collectionId = res.rows[0].CollectionId;
+      nftTx.tokenId = res.rows[0].TokenId;
+      nftTx.sender = address;
+    }
+    catch (e) {
+      setIncomingNftTransactionStatus(res.rows[0].Id, 2, e.toString());
+      log(e, "ERROR");
+    }
+    
+  }
+
+  return ksmTx;
+}
+
 async function addOffer(seller, collectionId, tokenId, quoteId, price) {
   const conn = await getDbConnection();
 
@@ -294,7 +344,7 @@ async function registerQuoteDepositAsync(api, sender, depositorAddress, amount) 
   await sendTransactionAsync(sender, tx);
 }
 
-async function registerNftDepositAsync(api, sender, depositorAddress, collection_id, token_id, blockNumber) {
+async function registerNftDepositAsync(api, sender, depositorAddress, collection_id, token_id) {
   log(`${depositorAddress} deposited ${collection_id}, ${token_id}`);
   const abi = new Abi(contractAbi);
   const contract = new ContractPromise(api, abi, config.marketContractAddress);
@@ -306,9 +356,6 @@ async function registerNftDepositAsync(api, sender, depositorAddress, collection
   //   log(`Blacklisted NFT received. Silently returning.`, "WARNING");
   //   return;
   // }
-
-  // Save in the DB
-  await addIncomingNFTTransaction(depositorAddress, collection_id, token_id, blockNumber);
 
   const tx = contract.tx.registerNftDeposit(value, maxgas, collection_id, token_id, depositorAddress);
   await sendTransactionAsync(sender, tx);
@@ -366,19 +413,12 @@ async function scanNftBlock(api, admin, blockNum) {
     if ((section == "nft") && (method == "transfer") && (args[0] == admin.address.toString())) {
       log(`NFT deposit from ${ex.signer.toString()} id (${args[1]}, ${args[2]})`, "RECEIVED");
 
-      // Register NFT Deposit
-      const deposit = {
-        address: ex.signer.toString(),
-        collectionId: args[1],
-        tokenId: args[2]
-      };
+      const address = ex.signer.toString();
+      const collectionId = args[1];
+      const tokenId = args[2];
 
-      try {
-        await registerNftDepositAsync(api, admin, deposit.address, deposit.collectionId, deposit.tokenId, blockNum);
-        log(`NFT deposit from ${deposit.address} id (${deposit.collectionId}, ${deposit.tokenId})`, "REGISTERED");
-      } catch (e) {
-        log(`NFT deposit from ${deposit.address} id (${deposit.collectionId}, ${deposit.tokenId})`, "FAILED TO REGISTER");
-      }
+      // Save in the DB
+      await addIncomingNFTTransaction(address, collectionId, tokenId, blockNum);
     }
     else if ((section == "contracts") && (method == "call") && (args[0].toString() == config.marketContractAddress)) {
       try {
@@ -552,8 +592,25 @@ async function handleUnique() {
       }
     }
 
-    // Handle queued KSM deposits
+    // Handle queued NFT deposits
     let deposit = false;
+    do {
+      deposit = false;
+      const nftTx = await getIncomingNFTTransaction();
+      if (nftTx.id.length > 0) {
+        deposit = true;
+
+        try {
+          await registerNftDepositAsync(api, admin, nftTx.sender, nftTx.collectionId, nftTx.tokenId);
+          await setIncomingNftTransactionStatus(nftTx.id, 1);
+          log(`NFT deposit from ${nftTx.sender} id (${nftTx.collectionId}, ${nftTx.tokenId})`, "REGISTERED");
+        } catch (e) {
+          log(`NFT deposit from ${nftTx.sender} id (${nftTx.collectionId}, ${nftTx.tokenId})`, "FAILED TO REGISTER");
+        }
+      }
+    } while (deposit);
+
+    // Handle queued KSM deposits
     do {
       deposit = false;
       const ksmTx = await getIncomingKusamaTransaction();
