@@ -179,7 +179,7 @@ async function getIncomingNFTTransaction() {
     
   }
 
-  return ksmTx;
+  return nftTx;
 }
 
 async function addOffer(seller, collectionId, tokenId, quoteId, price) {
