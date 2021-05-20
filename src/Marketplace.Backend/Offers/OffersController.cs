@@ -18,23 +18,16 @@ namespace Marketplace.Backend.Offers
 
         [HttpGet]
         [Route("")]
-        public Task<PaginationResult<OfferDto>> Get([FromQuery] PaginationParameter paginationParameter)
+        public Task<PaginationResult<OfferDto>> Get([FromQuery] PaginationParameter paginationParameter, [FromQuery] ulong? collectionId = default)
         {
-            return _offerService.Get(paginationParameter);
+            return _offerService.Get(collectionId, paginationParameter);
         }
-
-        // [HttpGet]
-        // [Route("{collectionId}")]
-        // public Task<IList<OfferDto>> Get(ulong collectionId)
-        // {
-        //     return _offerService.Get(collectionId);
-        // }
 
         [HttpGet]
         [Route("{seller}")]
-        public Task<PaginationResult<OfferDto>> Get(string seller, [FromQuery] PaginationParameter paginationParameter)
+        public Task<PaginationResult<OfferDto>> Get(string seller, [FromQuery] PaginationParameter paginationParameter, [FromQuery] ulong? collectionId = default)
         {
-            return _offerService.Get(seller, paginationParameter);
+            return _offerService.Get(seller, collectionId, paginationParameter);
         }
     }
 }

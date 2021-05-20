@@ -19,14 +19,24 @@ namespace Marketplace.Backend.Trades
             _marketplaceDbContext = marketplaceDbContext;
         }
 
-        public async Task<PaginationResult<TradeDto>> Get(PaginationParameter parameter)
+        public async Task<PaginationResult<TradeDto>> Get(ulong? collectionId, PaginationParameter parameter)
         {
-            return await _marketplaceDbContext
-                .Trades
+            return await 
+                FilterByCollectionId(_marketplaceDbContext.Trades, collectionId)
                 .OrderByDescending(t => t.TradeDate)
                 .AsNoTrackingWithIdentityResolution()
                 .Select(MapTrade())
                 .PaginateAsync(parameter);
+        }
+
+        private static IQueryable<Trade> FilterByCollectionId(IQueryable<Trade> trades, ulong? collectionId)
+        {
+            if (collectionId.HasValue)
+            {
+                trades = trades.Where(t => t.Offer.CollectionId == collectionId);
+            }
+
+            return trades;
         }
 
         private static Expression<Func<Trade, TradeDto>> MapTrade()
@@ -46,7 +56,7 @@ namespace Marketplace.Backend.Trades
                 .ToListAsync();
         }
 
-        public async Task<PaginationResult<TradeDto>> Get(string address, PaginationParameter parameter)
+        public async Task<PaginationResult<TradeDto>> Get(string address, ulong? collectionId, PaginationParameter parameter)
         {
             // Ensure that address is a proper base58 encoded address
             string base64Address = "Invalid";
@@ -59,8 +69,8 @@ namespace Marketplace.Backend.Trades
             catch (ArgumentOutOfRangeException) {}
             catch (ArgumentException) {}
 
-            return await _marketplaceDbContext
-                .Trades
+            return await 
+                FilterByCollectionId(_marketplaceDbContext.Trades, collectionId)
                 .Where(t => (t.Offer.Seller == base64Address) || (t.Buyer == base64Address))
                 .OrderByDescending(t => t.TradeDate)
                 .AsNoTrackingWithIdentityResolution()

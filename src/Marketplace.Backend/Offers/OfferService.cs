@@ -21,15 +21,25 @@ namespace Marketplace.Backend.Offers
             _configuration = configuration;
         }
 
-        public async Task<PaginationResult<OfferDto>> Get(PaginationParameter parameter)
+        public async Task<PaginationResult<OfferDto>> Get(ulong? collectionId, PaginationParameter parameter)
         {
-            return await _marketplaceDbContext
-                .Offers
+            return await 
+                FilterByCollectionId(_marketplaceDbContext.Offers, collectionId)
                 .Where(o => o.OfferStatus == OfferStatus.Active)
                 .OrderByDescending(o => o.CreationDate)
                 .AsNoTrackingWithIdentityResolution()
                 .Select(MapOfferDto())
                 .PaginateAsync(parameter);
+        }
+        
+        private static IQueryable<Offer> FilterByCollectionId(IQueryable<Offer> offers, ulong? collectionId)
+        {
+            if (collectionId.HasValue)
+            {
+                offers = offers.Where(o => o.CollectionId == collectionId);
+            }
+
+            return offers;
         }
 
         private static Expression<Func<Offer, OfferDto>> MapOfferDto()
@@ -48,7 +58,7 @@ namespace Marketplace.Backend.Offers
                 .ToListAsync();
         }
 
-        public async Task<PaginationResult<OfferDto>> Get(string seller, PaginationParameter paginationParameter)
+        public async Task<PaginationResult<OfferDto>> Get(string seller, ulong? collectionId, PaginationParameter paginationParameter)
         {
             // Ensure that seller is a proper base58 encoded address
             string base64Seller = "Invalid";
@@ -62,8 +72,8 @@ namespace Marketplace.Backend.Offers
             catch (ArgumentException) {}
             // Console.WriteLine($"Converted {seller} to base64: {base64Seller}");
 
-            return await _marketplaceDbContext
-                .Offers
+            return await 
+                FilterByCollectionId(_marketplaceDbContext.Offers, collectionId)
                 .Where(o => o.Seller == base64Seller && o.OfferStatus == OfferStatus.Active)
                 .OrderByDescending(o => o.CreationDate)
                 .AsNoTrackingWithIdentityResolution()

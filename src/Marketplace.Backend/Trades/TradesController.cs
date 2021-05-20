@@ -18,23 +18,16 @@ namespace Marketplace.Backend.Trades
         
         [HttpGet]
         [Route("")]
-        public Task<PaginationResult<TradeDto>> Get([FromQuery] PaginationParameter parameter)
+        public Task<PaginationResult<TradeDto>> Get([FromQuery] PaginationParameter parameter, [FromQuery] ulong? collectionId = default)
         {
-            return _tradeService.Get(parameter);
+            return _tradeService.Get(collectionId, parameter);
         }
-
-        // [HttpGet]
-        // [Route("{collectionId}")]
-        // public Task<IList<TradeDto>> Get(ulong collectionId)
-        // {
-        //     return _tradeService.Get(collectionId);
-        // }
 
         [HttpGet]
         [Route("{seller}")]
-        public Task<PaginationResult<TradeDto>> Get(string seller, [FromQuery] PaginationParameter parameter)
+        public Task<PaginationResult<TradeDto>> Get(string seller, [FromQuery] PaginationParameter parameter, [FromQuery] ulong? collectionId = default)
         {
-            return _tradeService.Get(seller, parameter);
+            return _tradeService.Get(seller, collectionId, parameter);
         }
 
     }
