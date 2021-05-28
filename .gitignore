@@ -4,6 +4,7 @@
 
 /src/**/bin/*
 /src/**/obj/*
+.env
 
 .env
 publish
