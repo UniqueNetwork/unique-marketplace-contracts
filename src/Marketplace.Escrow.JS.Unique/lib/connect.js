@@ -1,4 +1,6 @@
 const { ApiPromise, WsProvider } = require('@polkadot/api');
+const log = require('./log');
+const rtt = require("../runtime_types.json");
 
 
 module.exports = async function (config) {

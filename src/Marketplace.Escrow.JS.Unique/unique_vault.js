@@ -4,7 +4,7 @@ const { hexToU8a } = require('@polkadot/util');
 const { decodeAddress, encodeAddress } = require('@polkadot/util-crypto');
 const config = require('./config');
 const { v4: uuidv4 } = require('uuid');
-const { connect, utility:{ getDay, getTime } } = require('./lib');
+const { connect, log } = require('./lib');
 
 var BigNumber = require('bignumber.js');
 BigNumber.config({ DECIMAL_PLACES: 12, ROUNDING_MODE: BigNumber.ROUND_DOWN, decimalSeparator: '.' });
@@ -32,10 +32,6 @@ let timer;
 const blackList = [ 7395, 1745, 8587, 573, 4732, 3248, 6986, 7202, 6079, 1732, 6494, 7553, 6840, 4541, 2102, 3503, 6560, 4269, 2659, 3912, 3470, 6290, 5811, 5209, 8322, 1813, 7771, 2578, 2661, 2983, 2119, 3310, 1547, 1740, 3187, 8194, 4651, 6188, 2167, 3487, 3106, 6070, 3446, 2407, 5870, 3745, 6389, 3246, 9385, 9680, 6457, 8462, 2350, 3927, 2269, 8485, 6198, 6787, 2047, 2197, 2379, 2466, 2558, 2682, 2759, 2979, 4232, 4273, 8187, 8190, 2935, 2673, 5228, 7683, 2075, 9845, 1645, 3198, 7490, 3192, 7907, 3167, 858, 239, 7613, 2790, 7043, 5536, 8277, 1134, 6378, 2416, 2373, 2240, 3952, 5017, 4999, 5986, 3159, 6155, 9329, 6445, 2117, 3935, 6091, 7841, 8725, 5194, 5744, 8120, 5930, 578, 6171, 6930, 2180, 6212, 5963, 7097, 8774, 5233, 7978, 2938, 2364, 1823, 1840, 8672, 5616, 737, 6122, 8769, 615, 9729, 3489, 427, 9883, 8678, 6579, 1776, 7061, 873, 5324, 2390, 6187, 9517, 2321, 3390, 3180, 6692, 2129, 9854, 1572, 7412, 3966, 1302, 1145, 1067, 3519, 7387, 8314, 648, 219, 2055, 825, 1195
 ];
 
-
-function log(operation, status = "") {
-  console.log(`${getDay()} ${getTime()}: ${operation}${status.length > 0?',':''}${status}`);
-}
 
 let resolver = null;
 function delay(ms) {
@@ -362,7 +358,7 @@ async function scanNftBlock(api, admin, blockNum) {
     }
   });
 
-  for (let ex of successfulExtrinsics) {
+  for (let [extrinsicIndex, ex] of successfulExtrinsics.entries()) {
 
     const { _isSigned, _meta, method: { args, method, section } } = ex;
 
@@ -401,7 +397,7 @@ async function scanNftBlock(api, admin, blockNum) {
 
 
         // Ask call
-        if (data.includes("020f741e")) {
+        if (data.startsWith("0x020f741e")) {
           log(`======== Ask Call`);
           //    CallID   collection       token            quote            price
           // 0x 020f741e 0300000000000000 1200000000000000 0200000000000000 0080c6a47e8d03000000000000000000
@@ -422,79 +418,22 @@ async function scanNftBlock(api, admin, blockNum) {
         }
 
         // Buy call
-        if (data.includes("15d62801")) {
-          // We expect 4 events here with 
-          // [1] being QuoteWithdrawMatched and 
-          // [2] being NFTWithdraw 
-          log(`======== Buy call`);
-
-          // WithdrawNFT
-          log(`--- Event 1: ${abi.decodeEvent(allRecords[1].event.data[1]).event.identifier}`);
-          const buyerAddress = abi.decodeEvent(allRecords[1].event.data[1]).args[0].toString();
-          log(`NFT Buyer address: ${buyerAddress}`);
-          const collectionId = abi.decodeEvent(allRecords[1].event.data[1]).args[1].toString(); 
-          log(`collectionId = ${collectionId}`);
-          const tokenId = abi.decodeEvent(allRecords[1].event.data[1]).args[2].toString(); 
-          log(`tokenId = ${tokenId}`);
-          
-          // WithdrawQuoteMatched
-          log(`--- Event 2: ${abi.decodeEvent(allRecords[2].event.data[1]).event.identifier}`);
-          const sellerAddress = abi.decodeEvent(allRecords[2].event.data[1]).args[0].toString();
-          log(`NFT Seller address: ${sellerAddress}`);
-          const quoteId = parseInt(abi.decodeEvent(allRecords[2].event.data[1]).args[1].toString());
-          const price = abi.decodeEvent(allRecords[2].event.data[1]).args[2].toString();
-          log(`Price: ${quoteId} - ${price.toString()}`);
-
-          // Update offer to done (status = 3 = Traded)
-          const id = await updateOffer(collectionId, tokenId, 3);
-
-          // Record trade
-          await addTrade(id, buyerAddress);
-
-          // Record outgoing quote tx
-          await addOutgoingQuoteTransaction(quoteId, price.toString(), sellerAddress, 1);
-
-          // Execute NFT transfer to buyer
-          await sendNftTxAsync(api, admin, buyerAddress.toString(), parseInt(collectionId), parseInt(tokenId));
+        if (data.startsWith("0x15d62801")) {
+          const withdrawNFTEvent = findMatcherEvent(allRecords, abi, extrinsicIndex, 'WithdrawNFT');
+          const withdrawQuoteMatchedEvent = findMatcherEvent(allRecords, abi, extrinsicIndex, 'WithdrawQuoteMatched');
+          await handleBuyCall(api, admin, withdrawNFTEvent, withdrawQuoteMatchedEvent);
         }
 
         // Cancel: 0x9796e9a703000000000000000100000000000000
-        if (data.includes("9796e9a7")) {
-
-          log(`======== Cancel call`);
-
-          // WithdrawNFT
-          log(`--- Event 1: ${abi.decodeEvent(allRecords[1].event.data[1]).event.identifier}`);
-          const sellerAddress = abi.decodeEvent(allRecords[1].event.data[1]).args[0].toString();
-          log(`NFT Seller address: ${sellerAddress}`);
-          const collectionId = abi.decodeEvent(allRecords[1].event.data[1]).args[1].toString(); 
-          log(`collectionId = ${collectionId}`);
-          const tokenId = abi.decodeEvent(allRecords[1].event.data[1]).args[2].toString(); 
-          log(`tokenId = ${tokenId}`);
-
-
-          // Update offer to calceled (status = 2 = Canceled)
-          await updateOffer(collectionId, tokenId, 2);
-
-          // Execute NFT transfer back to seller
-          await sendNftTxAsync(api, admin, sellerAddress.toString(), parseInt(collectionId), parseInt(tokenId));
+        if (data.startsWith("0x9796e9a7")) {
+          const withdrawNFTEvent = findMatcherEvent(allRecords, abi, extrinsicIndex, 'WithdrawNFT');
+          await handleCancelCall(api, admin, withdrawNFTEvent);
         }
 
         // Withdraw: 0x410fcc9d020000000000000000407a10f35a00000000000000000000
-        if (data.includes("410fcc9d")) {
-
-          log(`======== Withdraw call`);
-
-          // WithdrawQuoteUnused
-          log(`--- Event 1: ${abi.decodeEvent(allRecords[1].event.data[1]).event.identifier}`);
-          const withdrawerAddress = abi.decodeEvent(allRecords[1].event.data[1]).args[0].toString();
-          log(`Withdrawing address: ${withdrawerAddress}`);
-          const quoteId = parseInt(abi.decodeEvent(allRecords[1].event.data[1]).args[1].toString());
-          const price = abi.decodeEvent(allRecords[1].event.data[1]).args[2].toString();
-          log(`Price: ${quoteId} - ${price.toString()}`);
-
-          // Record outgoing quote tx
-          await addOutgoingQuoteTransaction(quoteId, price.toString(), withdrawerAddress, 0);
+        if (data.startsWith("0x410fcc9d")) {
+          const withdrawQuoteUnusedEvent = findMatcherEvent(allRecords, abi, extrinsicIndex, 'WithdrawQuoteUnused');
+          await handleWithdrawCall(withdrawQuoteUnusedEvent);
         }
 
       }
@@ -503,6 +442,104 @@ async function scanNftBlock(api, admin, blockNum) {
       }
     }
   }
+}
+
+async function handleBuyCall(api, admin, withdrawNFTEvent, withdrawQuoteMatchedEvent) {
+  if(!withdrawNFTEvent) {
+    throw `Couldn't find WithdrawNFT event in Buy call`;
+  }
+  if(!withdrawQuoteMatchedEvent) {
+    throw `Couldn't find WithdrawQuoteMatched event in Buy call`;
+  }
+
+  log(`======== Buy call`);
+
+  // WithdrawNFT
+  log(`--- Event 1: ${withdrawNFTEvent.event.identifier}`);
+  const buyerAddress = withdrawNFTEvent.args[0].toString();
+  log(`NFT Buyer address: ${buyerAddress}`);
+  const collectionId = withdrawNFTEvent.args[1]; 
+  log(`collectionId = ${collectionId.toString()}`);
+  const tokenId = withdrawNFTEvent.args[2]; 
+  log(`tokenId = ${tokenId.toString()}`);
+  
+  // WithdrawQuoteMatched
+  log(`--- Event 2: ${withdrawQuoteMatchedEvent.event.identifier}`);
+  const sellerAddress = withdrawQuoteMatchedEvent.args[0].toString();
+  log(`NFT Seller address: ${sellerAddress}`);
+  const quoteId = withdrawQuoteMatchedEvent.args[1].toNumber();
+  const price = withdrawQuoteMatchedEvent.args[2].toString();
+  log(`Price: ${quoteId} - ${price.toString()}`);
+
+  // Update offer to done (status = 3 = Traded)
+  const id = await updateOffer(collectionId.toString(), tokenId.toString(), 3);
+
+  // Record trade
+  await addTrade(id, buyerAddress);
+
+  // Record outgoing quote tx
+  await addOutgoingQuoteTransaction(quoteId, price.toString(), sellerAddress, 1);
+
+  // Execute NFT transfer to buyer
+  await sendNftTxAsync(api, admin, buyerAddress.toString(), collectionId, tokenId);
+
+}
+
+async function handleCancelCall(api, admin, event) {
+  if(!event) {
+    throw `Couldn't find WithdrawNFT event in Cancel call`;
+  }
+
+  log(`======== Cancel call`);
+
+  // WithdrawNFT
+  log(`--- Event 1: ${event.event.identifier}`);
+  const sellerAddress = event.args[0];
+  log(`NFT Seller address: ${sellerAddress.toString()}`);
+  const collectionId = event.args[1]; 
+  log(`collectionId = ${collectionId.toString()}`);
+  const tokenId = event.args[2]; 
+  log(`tokenId = ${tokenId.toString()}`);
+
+
+  // Update offer to calceled (status = 2 = Canceled)
+  await updateOffer(collectionId.toString(), tokenId.toString(), 2);
+
+  // Execute NFT transfer back to seller
+  await sendNftTxAsync(api, admin, sellerAddress.toString(), collectionId, tokenId);
+}
+
+async function handleWithdrawCall(event) {
+  if(!event) {
+    throw `Couldn't find WithdrawQuoteUnused event in Withdraw call`;
+  }
+
+  log(`======== Withdraw call`);
+
+  // WithdrawQuoteUnused
+  log(`--- Event 1: ${event.event.identifier}`);
+  const withdrawerAddress = event.args[0];
+  log(`Withdrawing address: ${withdrawerAddress.toString()}`);
+  const quoteId = parseInt(event.args[1].toString());
+  const price = event.args[2].toString();
+  log(`Price: ${quoteId} - ${price.toString()}`);
+
+  // Record outgoing quote tx
+  await addOutgoingQuoteTransaction(quoteId, price.toString(), withdrawerAddress, 0);
+
+}
+
+function findMatcherEvent(allRecords, abi, extrinsicIndex, eventName) {
+  return allRecords
+    .filter(r => 
+      r.event.method.toString() === 'ContractEmitted' 
+      && r.phase.isApplyExtrinsic 
+      && r.phase.asApplyExtrinsic.toNumber() === extrinsicIndex
+      && r.event.data[0]
+      && r.event.data[0].toString() === config.marketContractAddress
+    )
+    .map(r => abi.decodeEvent(r.event.data[1]))
+    .filter(r => r.event.identifier === eventName)[0];
 }
 
 async function subscribeToBlocks(api) {
