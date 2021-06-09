@@ -5,7 +5,7 @@ namespace Marketplace.Backend.Trades
 {
     public interface ITradeService
     {
-        Task<PaginationResult<TradeDto>> Get(ulong? collectionId, PaginationParameter parameter);
-        Task<PaginationResult<TradeDto>> Get(string seller, ulong? collectionId, PaginationParameter parameter);
+        Task<PaginationResult<TradeDto>> Get(IReadOnlyCollection<ulong>? collectionIds, PaginationParameter parameter);
+        Task<PaginationResult<TradeDto>> Get(string seller, IReadOnlyCollection<ulong>? collectionIds, PaginationParameter parameter);
     }
 }
