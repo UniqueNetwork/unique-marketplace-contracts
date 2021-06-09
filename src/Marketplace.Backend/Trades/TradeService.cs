@@ -19,21 +19,21 @@ namespace Marketplace.Backend.Trades
             _marketplaceDbContext = marketplaceDbContext;
         }
 
-        public async Task<PaginationResult<TradeDto>> Get(ulong? collectionId, PaginationParameter parameter)
+        public async Task<PaginationResult<TradeDto>> Get(IReadOnlyCollection<ulong>? collectionIds, PaginationParameter parameter)
         {
             return await 
-                FilterByCollectionId(_marketplaceDbContext.Trades, collectionId)
+                FilterByCollectionId(_marketplaceDbContext.Trades, collectionIds)
                 .OrderByDescending(t => t.TradeDate)
                 .AsNoTrackingWithIdentityResolution()
                 .Select(MapTrade())
                 .PaginateAsync(parameter);
         }
 
-        private static IQueryable<Trade> FilterByCollectionId(IQueryable<Trade> trades, ulong? collectionId)
+        private static IQueryable<Trade> FilterByCollectionId(IQueryable<Trade> trades, IReadOnlyCollection<ulong>? collectionIds)
         {
-            if (collectionId.HasValue)
+            if (collectionIds?.Any() == true)
             {
-                trades = trades.Where(t => t.Offer.CollectionId == collectionId);
+                trades = trades.Where(t => collectionIds.Contains(t.Offer.CollectionId));
             }
 
             return trades;
@@ -56,7 +56,7 @@ namespace Marketplace.Backend.Trades
                 .ToListAsync();
         }
 
-        public async Task<PaginationResult<TradeDto>> Get(string address, ulong? collectionId, PaginationParameter parameter)
+        public async Task<PaginationResult<TradeDto>> Get(string address, IReadOnlyCollection<ulong>? collectionIds, PaginationParameter parameter)
         {
             // Ensure that address is a proper base58 encoded address
             string base64Address = "Invalid";
@@ -70,7 +70,7 @@ namespace Marketplace.Backend.Trades
             catch (ArgumentException) {}
 
             return await 
-                FilterByCollectionId(_marketplaceDbContext.Trades, collectionId)
+                FilterByCollectionId(_marketplaceDbContext.Trades, collectionIds)
                 .Where(t => (t.Offer.Seller == base64Address) || (t.Buyer == base64Address))
                 .OrderByDescending(t => t.TradeDate)
                 .AsNoTrackingWithIdentityResolution()

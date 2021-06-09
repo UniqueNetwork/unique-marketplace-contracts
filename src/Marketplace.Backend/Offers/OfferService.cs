@@ -21,10 +21,10 @@ namespace Marketplace.Backend.Offers
             _configuration = configuration;
         }
 
-        public async Task<PaginationResult<OfferDto>> Get(ulong? collectionId, PaginationParameter parameter)
+        public async Task<PaginationResult<OfferDto>> Get(IReadOnlyCollection<ulong>? collectionIds, PaginationParameter parameter)
         {
             return await 
-                FilterByCollectionId(_marketplaceDbContext.Offers, collectionId)
+                FilterByCollectionIds(_marketplaceDbContext.Offers, collectionIds)
                 .Where(o => o.OfferStatus == OfferStatus.Active)
                 .OrderByDescending(o => o.CreationDate)
                 .AsNoTrackingWithIdentityResolution()
@@ -32,11 +32,11 @@ namespace Marketplace.Backend.Offers
                 .PaginateAsync(parameter);
         }
         
-        private static IQueryable<Offer> FilterByCollectionId(IQueryable<Offer> offers, ulong? collectionId)
+        private static IQueryable<Offer> FilterByCollectionIds(IQueryable<Offer> offers, IReadOnlyCollection<ulong>? collectionIds)
         {
-            if (collectionId.HasValue)
+            if (collectionIds?.Any() == true)
             {
-                offers = offers.Where(o => o.CollectionId == collectionId);
+                offers = offers.Where(o => collectionIds.Contains(o.CollectionId));
             }
 
             return offers;
@@ -58,7 +58,7 @@ namespace Marketplace.Backend.Offers
                 .ToListAsync();
         }
 
-        public async Task<PaginationResult<OfferDto>> Get(string seller, ulong? collectionId, PaginationParameter paginationParameter)
+        public async Task<PaginationResult<OfferDto>> Get(string seller, IReadOnlyCollection<ulong>? collectionIds, PaginationParameter paginationParameter)
         {
             // Ensure that seller is a proper base58 encoded address
             string base64Seller = "Invalid";
@@ -73,7 +73,7 @@ namespace Marketplace.Backend.Offers
             // Console.WriteLine($"Converted {seller} to base64: {base64Seller}");
 
             return await 
-                FilterByCollectionId(_marketplaceDbContext.Offers, collectionId)
+                FilterByCollectionIds(_marketplaceDbContext.Offers, collectionIds)
                 .Where(o => o.Seller == base64Seller && o.OfferStatus == OfferStatus.Active)
                 .OrderByDescending(o => o.CreationDate)
                 .AsNoTrackingWithIdentityResolution()
