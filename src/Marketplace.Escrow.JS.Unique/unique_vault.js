@@ -37,7 +37,7 @@ let resolver = null;
 function delay(ms) {
   return new Promise(async (resolve, reject) => {
     resolver = resolve;
-    timer = setTimeout(() => { 
+    timer = setTimeout(() => {
       resolver = null;
       resolve();
     }, ms);
@@ -67,14 +67,16 @@ async function getDbConnection() {
 
 async function getLastHandledUniqueBlock() {
   const conn = await getDbConnection();
-  const res = await conn.query(`SELECT * FROM public."${uniqueBlocksTable}" ORDER BY public."${uniqueBlocksTable}"."BlockNumber" DESC LIMIT 1;`)
+  const selectLastHandledUniqueBlockSql = `SELECT * FROM public."${uniqueBlocksTable}" ORDER BY public."${uniqueBlocksTable}"."BlockNumber" DESC LIMIT 1;`;
+  const res = await conn.query(selectLastHandledUniqueBlockSql);
   const lastBlock = (res.rows.length > 0) ? res.rows[0].BlockNumber : 0;
   return lastBlock;
 }
 
 async function addHandledUniqueBlock(blockNumber) {
   const conn = await getDbConnection();
-  await conn.query(`INSERT INTO public."${uniqueBlocksTable}" VALUES ($1, now());`, [blockNumber]);
+  const insertHandledBlocSql = `INSERT INTO public."${uniqueBlocksTable}" VALUES ($1, now());`;
+  await conn.query(insertHandledBlocSql, [blockNumber]);
 }
 
 async function addIncomingNFTTransaction(address, collectionId, tokenId, blockNumber) {
@@ -83,27 +85,28 @@ async function addIncomingNFTTransaction(address, collectionId, tokenId, blockNu
   // Convert address into public key
   const publicKey = Buffer.from(decodeAddress(address), 'binary').toString('base64');
 
-  await conn.query(`INSERT INTO public."${incomingTxTable}"("Id", "CollectionId", "TokenId", "Value", "OwnerPublicKey", "UniqueProcessedBlockId", "Status", "LockTime", "ErrorMessage") VALUES ($1, $2, $3, 0, $4, $5, 0, now(), '');`, 
-    [uuidv4(), collectionId, tokenId, publicKey, blockNumber]);
+  const insertIncomingNftSql = `INSERT INTO public."${incomingTxTable}"("Id", "CollectionId", "TokenId", "Value", "OwnerPublicKey", "UniqueProcessedBlockId", "Status", "LockTime", "ErrorMessage") VALUES ($1, $2, $3, 0, $4, $5, 0, now(), '');`;
+
+  await conn.query(insertIncomingNftSql, [uuidv4(), collectionId, tokenId, publicKey, blockNumber]);
 }
 
 async function setIncomingNftTransactionStatus(id, status, error = "OK") {
   const conn = await getDbConnection();
 
+  const updateIncomingNftStatusSql = `UPDATE public."${incomingTxTable}" SET "Status" = $1, "ErrorMessage" = $2 WHERE "Id" = $3`;
+
   // Get one non-processed Kusama transaction
-  await conn.query(`UPDATE public."${incomingTxTable}" SET "Status" = $1, "ErrorMessage" = $2 WHERE "Id" = $3`, 
-    [status, error, id]);
+  await conn.query(updateIncomingNftStatusSql, [status, error, id]);
 }
 
 async function getIncomingNFTTransaction() {
   const conn = await getDbConnection();
 
+  const getIncomingNftsSql = `SELECT * FROM public."${incomingTxTable}"
+    WHERE "Status" = 0`;
   // Get one non-processed incoming NFT transaction
-  // Id | CollectionId | TokenId | Value | OwnerPublicKey | Status | LockTime | ErrorMessage | UniqueProcessedBlockId  
-  const res = await conn.query(`SELECT * FROM public."${incomingTxTable}" 
-    WHERE 
-      "Status" = 0 
-  `);
+  // Id | CollectionId | TokenId | Value | OwnerPublicKey | Status | LockTime | ErrorMessage | UniqueProcessedBlockId
+  const res = await conn.query(getIncomingNftsSql);
 
   let nftTx = {
     id: '',
@@ -128,7 +131,7 @@ async function getIncomingNFTTransaction() {
       setIncomingNftTransactionStatus(res.rows[0].Id, 2, e.toString());
       log(e, "ERROR");
     }
-    
+
   }
 
   return nftTx;
@@ -140,15 +143,16 @@ async function addOffer(seller, collectionId, tokenId, quoteId, price) {
   // Convert address into public key
   const publicKey = Buffer.from(decodeAddress(seller), 'binary').toString('base64');
 
+  const inserOfferSql = `INSERT INTO public."${offerTable}"("Id", "CreationDate", "CollectionId", "TokenId", "Price", "Seller", "Metadata", "OfferStatus", "SellerPublicKeyBytes", "QuoteId")
+    VALUES ($1, now(), $2, $3, $4, $5, '', 1, $6, $7);`;
   //Id | CreationDate | CollectionId | TokenId | Price | Seller | Metadata | OfferStatus | SellerPublicKeyBytes | QuoteId
-  await conn.query(`INSERT INTO public."${offerTable}"("Id", "CreationDate", "CollectionId", "TokenId", "Price", "Seller", "Metadata", "OfferStatus", "SellerPublicKeyBytes", "QuoteId") 
-    VALUES ($1, now(), $2, $3, $4, $5, '', 1, $6, $7);`, 
-    [uuidv4(), collectionId, tokenId, price, publicKey, decodeAddress(seller), quoteId]);
+  await conn.query(inserOfferSql, [uuidv4(), collectionId, tokenId, price, publicKey, decodeAddress(seller), quoteId]);
 }
 
 async function getOpenOfferId(collectionId, tokenId) {
   const conn = await getDbConnection();
-  const res = await conn.query(`SELECT * FROM public."${offerTable}" WHERE "CollectionId" = ${collectionId} AND "TokenId" = ${tokenId} AND "OfferStatus" = 1;`);
+  const selectOpenOffersSql = `SELECT * FROM public."${offerTable}" WHERE "CollectionId" = ${collectionId} AND "TokenId" = ${tokenId} AND "OfferStatus" = 1;`;
+  const res = await conn.query(selectOpenOffersSql);
   const id = (res.rows.length > 0) ? res.rows[0].Id : '';
   return id;
 }
@@ -158,8 +162,9 @@ async function updateOffer(collectionId, tokenId, newStatus) {
 
   const id = await getOpenOfferId(collectionId, tokenId);
 
+  const updateOfferSql = `UPDATE public."${offerTable}" SET "OfferStatus" = ${newStatus} WHERE "Id" = '${id}'`;
   // Only update active offer (should be one)
-  await conn.query(`UPDATE public."${offerTable}" SET "OfferStatus" = ${newStatus} WHERE "Id" = '${id}'`);
+  await conn.query(updateOfferSql);
 
   return id;
 }
@@ -170,8 +175,9 @@ async function addTrade(offerId, buyer) {
   // Convert address into public key
   const publicKey = Buffer.from(decodeAddress(buyer), 'binary').toString('base64');
 
-  await conn.query(`INSERT INTO public."${tradeTable}"("Id", "TradeDate", "Buyer", "OfferId") 
-    VALUES ($1, now(), $2, $3);`, 
+  const insertTradeSql = `INSERT INTO public."${tradeTable}"("Id", "TradeDate", "Buyer", "OfferId")
+    VALUES ($1, now(), $2, $3);`;
+  await conn.query(insertTradeSql,
     [uuidv4(), publicKey, offerId]);
 }
 
@@ -181,32 +187,33 @@ async function addOutgoingQuoteTransaction(quoteId, amount, recipient, withdrawT
   // Convert address into public key
   const publicKey = Buffer.from(decodeAddress(recipient), 'binary').toString('base64');
 
+  const insertOutgoingQuoteTransactionSql = `INSERT INTO public."${outgoingQuoteTxTable}"("Id", "Status", "ErrorMessage", "Value", "QuoteId", "RecipientPublicKey", "WithdrawType")
+    VALUES ($1, 0, '', $2, $3, $4, $5);`;
   // Id | Status | ErrorMessage | Value | QuoteId | RecipientPublicKey | WithdrawType
   // WithdrawType == 1 => Withdraw matched
   //                 0 => Unused
-  await conn.query(`INSERT INTO public."${outgoingQuoteTxTable}"("Id", "Status", "ErrorMessage", "Value", "QuoteId", "RecipientPublicKey", "WithdrawType") 
-    VALUES ($1, 0, '', $2, $3, $4, $5);`, 
-    [uuidv4(), amount, parseInt(quoteId), publicKey, withdrawType]);
+  await conn.query(insertOutgoingQuoteTransactionSql, [uuidv4(), amount, parseInt(quoteId), publicKey, withdrawType]);
 }
 
 async function setIncomingKusamaTransactionStatus(id, status, error = "OK") {
   const conn = await getDbConnection();
 
+  const updateIncomingKusamaTransactionStatusSql = `UPDATE public."${incomingQuoteTxTable}" SET "Status" = $1, "ErrorMessage" = $2 WHERE "Id" = $3`;
   // Get one non-processed Kusama transaction
-  await conn.query(`UPDATE public."${incomingQuoteTxTable}" SET "Status" = $1, "ErrorMessage" = $2 WHERE "Id" = $3`, 
-    [status, error, id]);
+  await conn.query(updateIncomingKusamaTransactionStatusSql, [status, error, id]);
 }
 
 async function getIncomingKusamaTransaction() {
   const conn = await getDbConnection();
 
+  const selectIncomingQuoteTxsSql = `SELECT * FROM public."${incomingQuoteTxTable}"
+    WHERE
+      "Status" = 0
+      AND "QuoteId" = 2 LIMIT 1
+  `;
   // Get one non-processed incoming Kusama transaction
   // Id | Amount | QuoteId | Description | AccountPublicKey | BlockId | Status | LockTime | ErrorMessage
-  const res = await conn.query(`SELECT * FROM public."${incomingQuoteTxTable}" 
-    WHERE 
-      "Status" = 0 
-      AND "QuoteId" = 2 LIMIT 1
-  `);
+  const res = await conn.query(selectIncomingQuoteTxsSql);
 
   let ksmTx = {
     id: '',
@@ -223,7 +230,7 @@ async function getIncomingKusamaTransaction() {
 
       // Convert public key into address
       const address = encodeAddress(hexToU8a(publicKey));
-      
+
       ksmTx.id = res.rows[0].Id;
       ksmTx.sender = address;
       ksmTx.amount = res.rows[0].Amount;
@@ -232,7 +239,7 @@ async function getIncomingKusamaTransaction() {
       setIncomingKusamaTransactionStatus(res.rows[0].Id, 2, e.toString());
       log(e, "ERROR");
     }
-    
+
   }
 
   return ksmTx;
@@ -245,7 +252,7 @@ function getTransactionStatus(events, status) {
   }
   if (status.isBroadcast) {
     return "NotReady";
-  } 
+  }
   if (status.isInBlock || status.isFinalized) {
     if(events.filter(e => e.event.data.method === 'ExtrinsicFailed').length > 0) {
       return "Fail";
@@ -330,6 +337,18 @@ async function sendNftTxAsync(api, sender, recipient, collection_id, token_id) {
   await sendTransactionAsync(sender, tx);
 }
 
+function isSuccessfulExtrinsic(eventRecords, extrinsicIndex) {
+  const events = eventRecords
+    .filter(({ phase }) =>
+      phase.isApplyExtrinsic &&
+      phase.asApplyExtrinsic.eq(extrinsicIndex)
+    )
+    .map(({ event }) => `${event.section}.${event.method}`);
+
+  return events.includes('system.ExtrinsicSuccess');
+
+}
+
 async function scanNftBlock(api, admin, blockNum) {
 
   if (blockNum % 10 == 0) log(`Scanning Block #${blockNum}`);
@@ -343,22 +362,12 @@ async function scanNftBlock(api, admin, blockNum) {
 
   // log(`Reading Block ${blockNum} Transactions`);
 
-  // collect successful extrinsics
-  let successfulExtrinsics = [];
-  signedBlock.block.extrinsics.forEach((ex, index) => {
-    const events = allRecords
-    .filter(({ phase }) =>
-      phase.isApplyExtrinsic &&
-      phase.asApplyExtrinsic.eq(index)
-    )
-    .map(({ event }) => `${event.section}.${event.method}`);
+  for (let [extrinsicIndex, ex] of signedBlock.block.extrinsics.entries()) {
 
-    if (events.includes('system.ExtrinsicSuccess')) {
-      successfulExtrinsics.push(ex);
+    // skip unsuccessful  extrinsics.
+    if (!isSuccessfulExtrinsic(allRecords, extrinsicIndex)) {
+      continue;
     }
-  });
-
-  for (let [extrinsicIndex, ex] of successfulExtrinsics.entries()) {
 
     const { _isSigned, _meta, method: { args, method, section } } = ex;
 
@@ -458,11 +467,11 @@ async function handleBuyCall(api, admin, withdrawNFTEvent, withdrawQuoteMatchedE
   log(`--- Event 1: ${withdrawNFTEvent.event.identifier}`);
   const buyerAddress = withdrawNFTEvent.args[0].toString();
   log(`NFT Buyer address: ${buyerAddress}`);
-  const collectionId = withdrawNFTEvent.args[1]; 
+  const collectionId = withdrawNFTEvent.args[1];
   log(`collectionId = ${collectionId.toString()}`);
-  const tokenId = withdrawNFTEvent.args[2]; 
+  const tokenId = withdrawNFTEvent.args[2];
   log(`tokenId = ${tokenId.toString()}`);
-  
+
   // WithdrawQuoteMatched
   log(`--- Event 2: ${withdrawQuoteMatchedEvent.event.identifier}`);
   const sellerAddress = withdrawQuoteMatchedEvent.args[0].toString();
@@ -496,9 +505,9 @@ async function handleCancelCall(api, admin, event) {
   log(`--- Event 1: ${event.event.identifier}`);
   const sellerAddress = event.args[0];
   log(`NFT Seller address: ${sellerAddress.toString()}`);
-  const collectionId = event.args[1]; 
+  const collectionId = event.args[1];
   log(`collectionId = ${collectionId.toString()}`);
-  const tokenId = event.args[2]; 
+  const tokenId = event.args[2];
   log(`tokenId = ${tokenId.toString()}`);
 
 
@@ -531,9 +540,9 @@ async function handleWithdrawCall(event) {
 
 function findMatcherEvent(allRecords, abi, extrinsicIndex, eventName) {
   return allRecords
-    .filter(r => 
-      r.event.method.toString() === 'ContractEmitted' 
-      && r.phase.isApplyExtrinsic 
+    .filter(r =>
+      r.event.method.toString() === 'ContractEmitted'
+      && r.phase.isApplyExtrinsic
       && r.phase.asApplyExtrinsic.toNumber() === extrinsicIndex
       && r.event.data[0]
       && r.event.data[0].toString() === config.marketContractAddress
@@ -573,7 +582,7 @@ async function handleUnique() {
       try {
         if (blockNum <= bestBlockNumber) {
           await addHandledUniqueBlock(blockNum);
-          
+
           // Handle NFT Deposits (by analysing block transactions)
           await scanNftBlock(api, admin, blockNum);
         } else break;
