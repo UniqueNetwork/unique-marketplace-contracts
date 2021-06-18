@@ -638,6 +638,7 @@ async function handleUnique() {
 }
 
 async function main() {
+  log(`config: ${JSON.stringify(config)}`);
   await handleUnique();
 }
 
