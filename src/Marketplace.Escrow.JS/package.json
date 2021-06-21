@@ -14,7 +14,7 @@
   "license": "Apache 2.0",
   "homepage": "",
   "dependencies": {
-    "@polkadot/api": "4.10.2-2",
+    "@polkadot/api": "4.15.1",
     "@polkadot/util-crypto": "6.0.5",
     "bignumber.js": "^9.0.0",
     "delay": "^4.4.0",
