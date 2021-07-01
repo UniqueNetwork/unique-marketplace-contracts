@@ -10,6 +10,7 @@ BigNumber.config({ DECIMAL_PLACES: 12, ROUNDING_MODE: BigNumber.ROUND_DOWN, deci
 const { Client } = require('pg');
 let dbClient = null;
 
+const FEE = 0.1;
 const incomingTxTable = "QuoteIncomingTransaction";
 const outgoingTxTable = "QuoteOutgoingTransaction";
 const kusamaBlocksTable = "KusamaProcessedBlock";
@@ -173,10 +174,11 @@ async function scanKusamaBlock(api, blockNum) {
         const amount = args[1];
         const address = ex.signer.toString();
 
-        // Apply 2% fee
-        let amountBN = new BigNumber(amount);
-        let fee = amountBN.dividedBy(51.001); // We received 102% of price, so the fee is 2/102 = 1/51 (+0.001 for rounding errors)
-        amountBN = amountBN.minus(fee).integerValue(BigNumber.ROUND_DOWN);
+        // Remove 10% fee
+        const addFee = (new BigNumber(FEE)).plus(1);
+        const amountBN = (new BigNumber(amount))
+          .dividedBy(addFee)
+          .integerValue(BigNumber.ROUND_UP); // 1.10        
 
         await addIncomingKusamaTransaction(amountBN.toString(), address, blockNum);
       }
