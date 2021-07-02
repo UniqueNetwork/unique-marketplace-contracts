@@ -284,7 +284,7 @@ function sendTransactionAsync(sender, transaction) {
 
 }
 
-async function registerQuoteDepositAsync(api, sender, depositorAddress, amount) {
+async function registerQuoteDepositAsync({api, sender, depositorAddress, amount}) {
   log(`${depositorAddress} deposited ${amount} in ${quoteId} currency`);
 
   const abi = new Abi(contractAbi);
@@ -372,6 +372,15 @@ async function scanNftBlock(api, admin, blockNum) {
       const address = ex.signer.toString();
       const collectionId = args[1];
       const tokenId = args[2];
+      
+      const paraments = {
+        api,            
+        userAddress: address,
+        sender: admin,
+        marketContractAddress: config.marketContractAddress,
+      };
+      // Add sender to contract white list
+      await addWhiteList(paraments);
 
       // Save in the DB
       await addIncomingNFTTransaction(address, collectionId, tokenId, blockNum);
@@ -536,6 +545,23 @@ async function subscribeToBlocks(api) {
   });
 }
 
+async function addWhiteList({
+  api, 
+  userAddress, 
+  sender, 
+  marketContractAddress
+}) {  
+  const whiteListedBefore = (await api.query.nft.contractWhiteList(marketContractAddress, userAddress)).toJSON();
+  if (!whiteListedBefore) {
+    try {
+      const addTx = api.tx.nft.addToContractWhiteList(marketContractAddress, userAddress);
+      await sendTransactionAsync(sender, addTx);
+    } catch(error) {
+      log(`Failed add to while list. Address: ${userAddress}`);
+    }
+  }
+}
+
 async function handleUnique() {
 
   const api = await connect(config);
@@ -598,9 +624,19 @@ async function handleUnique() {
       if (ksmTx.id.length > 0) {
         deposit = true;
 
-        try {
-          await registerQuoteDepositAsync(api, admin, ksmTx.sender, ksmTx.amount);
-          await setIncomingKusamaTransactionStatus(ksmTx.id, 1);
+        try {          
+
+          const paraments = {
+            api,            
+            userAddress: ksmTx.sender,
+            sender: admin,
+            marketContractAddress: config.marketContractAddress            
+          };
+          // Add sender to contract white list
+          await addWhiteList(paraments);
+
+          await registerQuoteDepositAsync(api, admin, ksmTx.sender, ksmTx.amount);          
+          await setIncomingKusamaTransactionStatus(ksmTx.id, 1);          
           log(`Quote deposit from ${ksmTx.sender} amount ${ksmTx.amount.toString()}`, "REGISTERED");
         } catch (e) {
           log(`Quote deposit from ${ksmTx.sender} amount ${ksmTx.amount.toString()}`, "FAILED TO REGISTER");
