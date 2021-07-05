@@ -665,7 +665,8 @@ async function migrateDb(){
 }
 
 async function main() {
-  log(`config: ${JSON.stringify(config)}`);
+  log(`config.wsEndpoint: ${config.wsEndpoint}`);
+  log(`config.marketContractAddress: ${config.marketContractAddress}`);
   await migrateDb();
   await handleUnique();
 }
