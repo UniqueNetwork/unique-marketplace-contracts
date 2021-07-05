@@ -644,7 +644,7 @@ async function handleUnique() {
           // Add sender to contract white list
           await addWhiteList(paraments);
 
-          await registerQuoteDepositAsync(api, admin, ksmTx.sender, ksmTx.amount);          
+          await registerQuoteDepositAsync({api, sender: admin, depositorAddress: ksmTx.sender, amount: ksmTx.amount});          
           await setIncomingKusamaTransactionStatus(ksmTx.id, 1);          
           log(`Quote deposit from ${ksmTx.sender} amount ${ksmTx.amount.toString()}`, "REGISTERED");
         } catch (e) {
