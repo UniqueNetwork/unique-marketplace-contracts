@@ -557,7 +557,9 @@ async function addWhiteList({
   userAddress, 
   sender, 
   marketContractAddress
-}) {  
+}) {
+  if (!config.whiteList) return;
+
   const whiteListedBefore = (await api.query.nft.contractWhiteList(marketContractAddress, userAddress)).toJSON();
   if (!whiteListedBefore) {
     try {
@@ -665,7 +667,7 @@ async function migrateDb(){
 }
 
 async function main() {
-  log(`config.wsEndpoint: ${config.wsEndpoint}`);
+  log(`config.wsEndpoint: ${config.marketContractAddress}`);
   log(`config.marketContractAddress: ${config.marketContractAddress}`);
   await migrateDb();
   await handleUnique();
