@@ -5,6 +5,7 @@ const { decodeAddress, encodeAddress } = require('@polkadot/util-crypto');
 const config = require('./config');
 const { v4: uuidv4 } = require('uuid');
 const { connect, log } = require('./lib');
+const fs = require('fs');
 
 var BigNumber = require('bignumber.js');
 BigNumber.config({ DECIMAL_PLACES: 12, ROUNDING_MODE: BigNumber.ROUND_DOWN, decimalSeparator: '.' });
@@ -140,8 +141,14 @@ async function addOffer(seller, collectionId, tokenId, quoteId, price) {
 
   const inserOfferSql = `INSERT INTO public."${offerTable}"("Id", "CreationDate", "CollectionId", "TokenId", "Price", "Seller", "Metadata", "OfferStatus", "SellerPublicKeyBytes", "QuoteId")
     VALUES ($1, now(), $2, $3, $4, $5, '', 1, $6, $7);`;
+  const offerId = uuidv4();
   //Id | CreationDate | CollectionId | TokenId | Price | Seller | Metadata | OfferStatus | SellerPublicKeyBytes | QuoteId
-  await conn.query(inserOfferSql, [uuidv4(), collectionId, tokenId, price, publicKey, decodeAddress(seller), quoteId]);
+  await conn.query(inserOfferSql, [offerId, collectionId, tokenId, price, publicKey, decodeAddress(seller), quoteId]);
+
+  const updateNftIncomesSql = `UPDATE public."NftIncomingTransaction"
+	SET "OfferId"=$1
+	WHERE "CollectionId" = $2 AND "TokenId" = $3 AND "OfferId" IS NULL;`
+  await conn.query(updateNftIncomesSql, [offerId, collectionId, tokenId]);
 }
 
 async function getOpenOfferId(collectionId, tokenId) {
@@ -615,8 +622,15 @@ async function handleUnique() {
 
 }
 
+async function migrateDb(){
+  const conn = await getDbConnection();
+  const migrationSql = fs.readFileSync('migration-script.sql').toString();
+  await conn.query(migrationSql);
+}
+
 async function main() {
   log(`config: ${JSON.stringify(config)}`);
+  await migrateDb();
   await handleUnique();
 }
 

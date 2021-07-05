@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Marketplace.Backend.Base58;
 using Marketplace.Db;
 using Marketplace.Db.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Marketplace.Backend.OnHold
 {
@@ -36,12 +37,8 @@ namespace Marketplace.Backend.OnHold
 
         private IQueryable<NftIncomingTransaction> IncomingWithoutOffer()
         {
-            return from income in _marketplaceDbContext.NftIncomingTransactions
-                from offer in _marketplaceDbContext.Offers.Where(o =>
-                    o.CollectionId == income.CollectionId && o.TokenId == income.TokenId &&
-                    o.OfferStatus == OfferStatus.Active).DefaultIfEmpty()
-                where offer == null
-                select income;
+            return _marketplaceDbContext.NftIncomingTransactions
+                .Where(n => n.OfferId == null);
         }
 
         public Task<PaginationResult<OnHold>> Get(string owner, IReadOnlyCollection<ulong>? collectionIds, PaginationParameter parameter)
@@ -58,13 +55,74 @@ namespace Marketplace.Backend.OnHold
             catch (ArgumentException) {}
             // Console.WriteLine($"Converted {seller} to base64: {base64Seller}");
             
-            var incomings = IncomingWithoutOffer().Where(i => i.OwnerPublicKey == base64Owner);
+            var incomings = IncomingWithoutOffer()
+                .Where(i => i.OwnerPublicKey == base64Owner);
             if (collectionIds?.Any() == true)
             {
                 incomings = incomings.Where(i => collectionIds.Contains(i.CollectionId));
             }
 
             return incomings.Select(MapOnHold()).PaginateAsync(parameter);
+        }
+
+        public async Task ConnectOffersAndNftIncomes()
+        {
+            var incomes = await _marketplaceDbContext.NftIncomingTransactions
+                .Where(income => income.OfferId == null)
+                .OrderBy(income => income.CollectionId)
+                .ThenBy(income => income.TokenId)
+                .ThenBy(income => income.UniqueProcessedBlockId)
+                .ToListAsync();
+
+            var offers = await (
+                    from offer in _marketplaceDbContext.Offers
+                    from income in _marketplaceDbContext.NftIncomingTransactions.Where(i => i.OfferId == offer.Id)
+                        .DefaultIfEmpty()
+                    where income == null
+                    select offer
+                )
+                .OrderBy(offer => offer.CollectionId)
+                .ThenBy(offer=> offer.TokenId)
+                .ThenBy(offer => offer.CreationDate)
+                .ToListAsync();
+
+            var incomeIndex = 0;
+            var offerIndex = 0;
+            while (incomeIndex < incomes.Count && offerIndex < offers.Count)
+            {
+                var income = incomes[incomeIndex];
+                var offer = offers[offerIndex];
+                if (income.CollectionId == offer.CollectionId && income.TokenId == offer.TokenId)
+                {
+                    incomeIndex++;
+                    offerIndex++;
+                    income.Offer = offer;
+                    await _marketplaceDbContext.SaveChangesAsync();
+                }
+
+                if (income.CollectionId == offer.CollectionId)
+                {
+                    if (income.TokenId > offer.TokenId)
+                    {
+                        offerIndex++;
+                    }
+                    else
+                    {
+                        incomeIndex++;
+                    }
+                }
+                else
+                {
+                    if (income.CollectionId > offer.CollectionId)
+                    {
+                        offerIndex++;
+                    }
+                    else
+                    {
+                        incomeIndex++;
+                    }
+                }
+            }
         }
     }
 }

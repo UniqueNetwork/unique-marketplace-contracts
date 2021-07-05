@@ -29,5 +29,12 @@ namespace Marketplace.Backend.OnHold
         {
             return _onHoldService.Get(owner, collectionIds, paginationParameter);
         }
+
+        [HttpGet]
+        [Route("[action]")]
+        public Task ConnectOffersAndNftIncomes()
+        {
+            return _onHoldService.ConnectOffersAndNftIncomes();
+        }
     }
 }

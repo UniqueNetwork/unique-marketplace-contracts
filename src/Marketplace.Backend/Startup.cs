@@ -77,22 +77,6 @@ namespace Marketplace.Backend
             {
                 endpoints.MapControllers();
             });
-
-            var migrated = false;
-            do
-            {
-                try
-                {
-                    using var scope = app.ApplicationServices.CreateScope();
-                    var context = scope.ServiceProvider.GetService<MarketplaceDbContext>();
-                    context!.Database.Migrate();
-                    migrated = true;
-                }
-                catch (Exception)
-                {
-                    Task.Delay(TimeSpan.FromSeconds(10)).GetAwaiter().GetResult();
-                }
-            } while (!migrated);
         }
     }
 }

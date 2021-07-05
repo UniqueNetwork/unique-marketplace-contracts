@@ -7,5 +7,6 @@ namespace Marketplace.Backend.OnHold
     {
         Task<PaginationResult<OnHold>> Get(IReadOnlyCollection<ulong>? collectionIds, PaginationParameter parameter);
         Task<PaginationResult<OnHold>> Get(string owner, IReadOnlyCollection<ulong>? collectionIds, PaginationParameter parameter);
+        Task ConnectOffersAndNftIncomes();
     }
 }
