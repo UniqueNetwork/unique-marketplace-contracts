@@ -40,5 +40,10 @@ namespace Marketplace.Db.Models
 
         [Required]
         public virtual UniqueProcessedBlock UniqueProcessedBlock { get; set; } = null!;
+
+        [ForeignKey(nameof(Offer))]
+        public Guid? OfferId { get; set; }
+        
+        public virtual Offer? Offer { get; set; } = null;
     }
 }

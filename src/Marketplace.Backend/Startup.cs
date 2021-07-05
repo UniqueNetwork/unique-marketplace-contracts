@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Marketplace.Backend.Offers;
+using Marketplace.Backend.OnHold;
 using Marketplace.Backend.Trades;
 using Marketplace.Db;
 using Microsoft.AspNetCore.Builder;
@@ -52,6 +53,7 @@ namespace Marketplace.Backend
 
             services.AddScoped<IOfferService, OfferService>();
             services.AddScoped<ITradeService, TradeService>();
+            services.AddScoped<IOnHoldService, OnHoldService>();
             services.AddSingleton<Configuration>(Configuration);
         }
 
@@ -75,22 +77,6 @@ namespace Marketplace.Backend
             {
                 endpoints.MapControllers();
             });
-
-            var migrated = false;
-            do
-            {
-                try
-                {
-                    using var scope = app.ApplicationServices.CreateScope();
-                    var context = scope.ServiceProvider.GetService<MarketplaceDbContext>();
-                    context!.Database.Migrate();
-                    migrated = true;
-                }
-                catch (Exception)
-                {
-                    Task.Delay(TimeSpan.FromSeconds(10)).GetAwaiter().GetResult();
-                }
-            } while (!migrated);
         }
     }
 }
