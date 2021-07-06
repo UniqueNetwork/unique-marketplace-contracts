@@ -89,7 +89,7 @@ async function addIncomingNFTTransaction(address, collectionId, tokenId, blockNu
   await conn.query(updateIncomingNftSql, [errorMessage, collectionId, tokenId]);
 
   // Clear all previous appearances of this NFT with null orderId
-  const updateNftIncomesSql = `DELETE public."${incomingTxTable}"
+  const updateNftIncomesSql = `DELETE FROM public."${incomingTxTable}"
     WHERE "OfferId" IS NULL AND "CollectionId" = $1 AND "TokenId" = $2;`
   await conn.query(updateNftIncomesSql, [collectionId, tokenId]);
 
