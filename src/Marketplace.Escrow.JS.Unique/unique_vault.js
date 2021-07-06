@@ -89,11 +89,9 @@ async function addIncomingNFTTransaction(address, collectionId, tokenId, blockNu
   await conn.query(updateIncomingNftSql, [errorMessage, collectionId, tokenId]);
 
   // Clear all previous appearances of this NFT with null orderId
-  const offerId = uuidv4();
-  const updateNftIncomesSql = `UPDATE public."${incomingTxTable}"
-    SET "OfferId"=$1
-    WHERE "OfferId" IS NULL AND "CollectionId" = $2 AND "TokenId" = $3;`
-  await conn.query(updateNftIncomesSql, [offerId, collectionId, tokenId]);
+  const updateNftIncomesSql = `DELETE public."${incomingTxTable}"
+    WHERE "OfferId" IS NULL AND "CollectionId" = $1 AND "TokenId" = $2;`
+  await conn.query(updateNftIncomesSql, [collectionId, tokenId]);
 
   // Add incoming NFT with Status = 0
   const insertIncomingNftSql = `INSERT INTO public."${incomingTxTable}"("Id", "CollectionId", "TokenId", "Value", "OwnerPublicKey", "UniqueProcessedBlockId", "Status", "LockTime", "ErrorMessage") VALUES ($1, $2, $3, 0, $4, $5, 0, now(), '');`;
