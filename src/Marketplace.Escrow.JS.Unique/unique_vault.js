@@ -81,8 +81,22 @@ async function addIncomingNFTTransaction(address, collectionId, tokenId, blockNu
   // Convert address into public key
   const publicKey = Buffer.from(decodeAddress(address), 'binary').toString('base64');
 
-  const insertIncomingNftSql = `INSERT INTO public."${incomingTxTable}"("Id", "CollectionId", "TokenId", "Value", "OwnerPublicKey", "UniqueProcessedBlockId", "Status", "LockTime", "ErrorMessage") VALUES ($1, $2, $3, 0, $4, $5, 0, now(), '');`;
+  // Clear all previous appearances of this NFT with status 0, update to error
+  const errorMessage = "Failed to register (sync err)";
+  const updateIncomingNftSql = `UPDATE public."${incomingTxTable}" 
+    SET  "Status" = 2, "ErrorMessage" = $1 
+    WHERE "Status" = 0 AND "CollectionId" = $2 AND "TokenId" = $3;`;
+  await conn.query(updateIncomingNftSql, [errorMessage, collectionId, tokenId]);
 
+  // Clear all previous appearances of this NFT with null orderId
+  const offerId = uuidv4();
+  const updateNftIncomesSql = `UPDATE public."${incomingTxTable}"
+    SET "OfferId"=$1
+    WHERE "OfferId" IS NULL AND "CollectionId" = $2 AND "TokenId" = $3;`
+  await conn.query(updateNftIncomesSql, [offerId, collectionId, tokenId]);
+
+  // Add incoming NFT with Status = 0
+  const insertIncomingNftSql = `INSERT INTO public."${incomingTxTable}"("Id", "CollectionId", "TokenId", "Value", "OwnerPublicKey", "UniqueProcessedBlockId", "Status", "LockTime", "ErrorMessage") VALUES ($1, $2, $3, 0, $4, $5, 0, now(), '');`;
   await conn.query(insertIncomingNftSql, [uuidv4(), collectionId, tokenId, publicKey, blockNumber]);
 }
 
@@ -145,7 +159,7 @@ async function addOffer(seller, collectionId, tokenId, quoteId, price) {
   //Id | CreationDate | CollectionId | TokenId | Price | Seller | Metadata | OfferStatus | SellerPublicKeyBytes | QuoteId
   await conn.query(inserOfferSql, [offerId, collectionId, tokenId, price, publicKey, decodeAddress(seller), quoteId]);
 
-  const updateNftIncomesSql = `UPDATE public."NftIncomingTransaction"
+  const updateNftIncomesSql = `UPDATE public."${incomingTxTable}"
 	SET "OfferId"=$1
 	WHERE "CollectionId" = $2 AND "TokenId" = $3 AND "OfferId" IS NULL;`
   await conn.query(updateNftIncomesSql, [offerId, collectionId, tokenId]);
