@@ -83,8 +83,17 @@ async function addIncomingNFTTransaction(address, collectionId, tokenId, blockNu
 
   // Clear all previous appearances of this NFT with status 0, update to error
   const errorMessage = "Failed to register (sync err)";
-  const updateIncomingNftSql = `UPDATE public."${incomingTxTable}" SET  "Status" = 2, "ErrorMessage" = $1 WHERE "Status" = 0;`;
-  await conn.query(updateIncomingNftSql, [errorMessage]);
+  const updateIncomingNftSql = `UPDATE public."${incomingTxTable}" 
+    SET  "Status" = 2, "ErrorMessage" = $1 
+    WHERE "Status" = 0 AND "CollectionId" = $2 AND "TokenId" = $3;`;
+  await conn.query(updateIncomingNftSql, [errorMessage, collectionId, tokenId]);
+
+  // Clear all previous appearances of this NFT with null orderId
+  const offerId = uuidv4();
+  const updateNftIncomesSql = `UPDATE public."${incomingTxTable}"
+    SET "OfferId"=$1
+    WHERE "OfferId" IS NULL AND "CollectionId" = $2 AND "TokenId" = $3;`
+  await conn.query(updateNftIncomesSql, [offerId, collectionId, tokenId]);
 
   // Add incoming NFT with Status = 0
   const insertIncomingNftSql = `INSERT INTO public."${incomingTxTable}"("Id", "CollectionId", "TokenId", "Value", "OwnerPublicKey", "UniqueProcessedBlockId", "Status", "LockTime", "ErrorMessage") VALUES ($1, $2, $3, 0, $4, $5, 0, now(), '');`;
