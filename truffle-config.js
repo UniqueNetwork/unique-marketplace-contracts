@@ -23,6 +23,7 @@
 //
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
+const HDWalletProvider = require("@truffle/hdwallet-provider");
 
 module.exports = {
   /**
@@ -36,6 +37,30 @@ module.exports = {
    */
 
   networks: {
+    development: {
+    
+      provider: () => new HDWalletProvider({
+        privateKeys: ["0xb8c1b5c1d81f9475fdf2e334517d29f733bdfa40682207571b12fc1142cbf329"],  
+        providerOrUrl: "http://localhost:8545/"}),
+        network_id: 999          
+        /**
+* ganache-cli -m "clutch captain shoe salt awake harvest setup primary inmate ugly among become" -i 999 -p 8545 -u 0xa0df350d2637096571F7A701CBc1C5fdE30dF76A --db ../ganache_local3 --allowUnlimitedContractSize  -g 0 -e 1000
+*/
+      },
+    polkatest: {
+  
+        provider: () => new HDWalletProvider({
+          privateKeys: ["0xb8c1b5c1d81f9475fdf2e334517d29f733bdfa40682207571b12fc1142cbf329"],  
+          providerOrUrl:  "http://localhost:9933/"}),
+          network_id: 8888,
+          deploymentPollingInterval: 10000
+          /**
+* ganache-cli -m " " -i 999 -p 8545 -u 0xa0df350d2637096571F7A701CBc1C5fdE30dF76A --db ../ganache_local3 --allowUnlimitedContractSize  -g 0 -e 1000
+* 0xa0df350d2637096571F7A701CBc1C5fdE30dF76A
+* b8c1b5c1d81f9475fdf2e334517d29f733bdfa40682207571b12fc1142cbf329
+* 5H9kK46KadoBKXGbhufTcB6ujAMfuQYt7zGB9rjEV6KumKzi
+*/
+        },
     // Useful for testing. The `development` name is special - truffle uses it by default
     // if it's defined here and no other network is specified at the command line.
     // You should run a client (like ganache-cli, geth or parity) in a separate terminal

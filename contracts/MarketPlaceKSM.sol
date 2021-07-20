@@ -11,33 +11,43 @@ contract MarketPlaceKSM is IERC721Receiver {
         
         uint256 idNFT;
         uint256 currencyCode;
-        uint256  price;
+        uint256 price;
         uint256 time;
         address idCollection;
-        address useraaDDR;
+        address userAddr;
         uint8 flagActive;        
     }
     Offer[] public  offers;
 
-    mapping (address => uint256) balanceNFt;  //  [useraaDDR] => [nftID]
-    mapping (address => mapping (uint256 => uint256)) balanceKSM;  //  [useraaDDR] => [KSMs]
-    mapping (address => mapping (address => mapping (uint256 => uint256)))   asks ; // [buyer][idCollection][idNFT] => idOffer
+    mapping (address => mapping (uint256 => uint256)) public balanceKSM;  //  [userAddr] => [KSMs]
+    mapping (address => mapping (address => mapping (uint256 => uint256))) public  asks ; // [buyer][idCollection][idNFT] => idOffer
 
-    mapping (address => uint[]) asksbySeller; // [addressSeller] =>idOffer
+    mapping (address => uint[]) public asksbySeller; // [addressSeller] =>idOffer
 
     address escrow;
+    address owner;
 
     constructor (address _escrow) {
         escrow = _escrow;
+        owner = msg.sender;
 
     }
 
-    function setEscrow  (address _newEscrow) public onlyEscrow {
+   function setowner  (address _newEscrow) public onlyOwner {
+        escrow = _newEscrow;
+    }
+
+    function setEscrow  (address _newEscrow) public onlyOwner {
         escrow = _newEscrow;
     }
 
     modifier onlyEscrow () {
         require(msg.sender == escrow, "Only escrow can");
+        _;
+    }
+
+    modifier onlyOwner () {
+        require(msg.sender == owner, "Only owner can");
         _;
     }
 
@@ -51,8 +61,8 @@ contract MarketPlaceKSM is IERC721Receiver {
                     uint8 _active ) public  { //
         
         require (IERC721(_idCollection).ownerOf(_idNFT) == msg.sender, "Not right token owner");
-
-        if (offers[asks[msg.sender][_idCollection][_idNFT]].flagActive == 0){
+        uint offerID =  asks[msg.sender][_idCollection][_idNFT];
+        if (offers.length == 0 || offers[offerID].idCollection == address(0)){
             offers.push(Offer(        
                     _idNFT,
                     _currencyCode,
@@ -77,13 +87,13 @@ contract MarketPlaceKSM is IERC721Receiver {
             }
 
             IERC721(_idCollection).transferFrom(msg.sender, address(this), _idNFT);
-
+            
     }
 
 
     function deposit (uint256 _amount, uint256 _currencyCode, address _sender   ) public onlyEscrow {
 
-        balanceKSM[_sender][_currencyCode].add(_amount);
+        balanceKSM[_sender][_currencyCode]= balanceKSM[_sender][_currencyCode].add(_amount);
 
     }
 
@@ -91,16 +101,17 @@ contract MarketPlaceKSM is IERC721Receiver {
         
         Offer memory offer = offers[ asks[msg.sender][_idCollection][_idNFT]];
         //1. reduce balance
-        balanceKSM[msg.sender][offer.currencyCode].sub( offer.price, "Insuccificient KSMs funds");
+        balanceKSM[msg.sender][offer.currencyCode] = balanceKSM[msg.sender][offer.currencyCode].sub( offer.price, "Insuccificient KSMs funds");
         // 2. close offer
         offers[ asks[msg.sender][_idCollection][_idNFT]].flagActive = 0;
         // 3. transfer NFT to buyer
         IERC721(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
 
+
     }
 
     function withdraw (uint256 _amount, uint256 _currencyCode, address _sender   ) public  onlyEscrow returns (bool ){
-        balanceKSM[_sender][_currencyCode].sub( _amount, "Insuccificient KSMs balance");
+        balanceKSM[_sender][_currencyCode] = balanceKSM[_sender][_currencyCode].sub( _amount, "Insuccificient KSMs balance");
         return true;
 
 

@@ -8,3 +8,4 @@
 .env
 publish
 build
+node_modules
