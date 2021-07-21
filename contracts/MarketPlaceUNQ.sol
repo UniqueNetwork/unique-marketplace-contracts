@@ -1,16 +1,17 @@
 // SPDX-License-Identifier:  Apache License
 pragma solidity >= 0.8.0;
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 
-contract MarketPlaceKSM is IERC721Receiver {
+contract MarketPlaceUNQ is IERC721Receiver {
     using SafeMath for uint;
     struct Offer {
         
         uint256 idNFT;
-        uint256 currencyCode;
+        address currencyCode; //address of currency  token, = address(0) for UNQ
         uint256 price;
         uint256 time;
         address idCollection;
@@ -55,7 +56,7 @@ contract MarketPlaceKSM is IERC721Receiver {
     * Make bids (offers) to sell NFTs 
     */
     function setAsk (uint256 _price, 
-                    uint256  _currencyCode, 
+                    address  _currencyCode, 
                     address _idCollection, 
                     uint256 _idNFT,
                     uint8 _active ) public  { //
@@ -91,17 +92,14 @@ contract MarketPlaceKSM is IERC721Receiver {
     }
 
 
-    function deposit (uint256 _amount, uint256 _currencyCode, address _sender   ) public onlyEscrow {
 
-        balanceKSM[_sender][_currencyCode]= balanceKSM[_sender][_currencyCode].add(_amount);
 
-    }
-
-    function buy (address _idCollection, uint256 _idNFT ) public {
+    function buy (address _idCollection, uint256 _idNFT ) public payable { //buing for UNQ like as ethers 
         
         Offer memory offer = offers[ asks[msg.sender][_idCollection][_idNFT]];
-        //1. reduce balance
-        balanceKSM[msg.sender][offer.currencyCode] = balanceKSM[msg.sender][offer.currencyCode].sub( offer.price, "Insuccificient KSMs funds");
+        //1. check sent amount and send to seller
+        require (msg.value == offer.price, "Not right amount UNQ sent, have to be equal price" );     
+        payable(offer.userAddr).transfer(offer.price); 
         // 2. close offer
         offers[ asks[msg.sender][_idCollection][_idNFT]].flagActive = 0;
         // 3. transfer NFT to buyer
@@ -110,12 +108,23 @@ contract MarketPlaceKSM is IERC721Receiver {
 
     }
 
-    function withdraw (uint256 _amount, uint256 _currencyCode, address _sender   ) public  onlyEscrow returns (bool ){
-        balanceKSM[_sender][_currencyCode] = balanceKSM[_sender][_currencyCode].sub( _amount, "Insuccificient KSMs balance");
-        return true;
+
+    function buy (address _idCollection, uint256 _idNFT, address _currencyCode, uint _amount ) public payable {
+        
+        Offer memory offer = offers[ asks[msg.sender][_idCollection][_idNFT]];
+        //1. check sent amount and transfer from buyer to seller
+        require (offer.price == _amount && offer.currencyCode == _currencyCode, "Not right amount or currency sent, have to be equal currency and price" );
+        // !!! transfer have to be approved to marketplace!
+        IERC20(offer.currencyCode).transferFrom(msg.sender, address(this), offer.price); //to not disclojure buyer's address 
+        IERC20(offer.currencyCode).transfer(offer.userAddr, offer.price);
+        // 2. close offer
+        offers[ asks[msg.sender][_idCollection][_idNFT]].flagActive = 0;
+        // 3. transfer NFT to buyer
+        IERC721(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
 
 
     }
+
 
     function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data)  public override pure returns(bytes4) {
             return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
