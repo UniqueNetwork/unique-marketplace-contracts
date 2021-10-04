@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract MarketPlaceKSM is IERC721Receiver {
     using SafeMath for uint;
-    struct Offer {
+    struct Order {
         
         uint256 idNFT;
         uint256 currencyCode;
@@ -17,12 +17,12 @@ contract MarketPlaceKSM is IERC721Receiver {
         address userAddr;
         uint8 flagActive;        
     }
-    Offer[] public  offers;
+    Order[] public  orders;
 
     mapping (address => mapping (uint256 => uint256)) public balanceKSM;  //  [userAddr] => [KSMs]
-    mapping (address => mapping (address => mapping (uint256 => uint256))) public  asks ; // [buyer][idCollection][idNFT] => idOffer
+    mapping (address => mapping (uint256 => uint256)) public  asks ; // [buyer][idCollection][idNFT] => idorder
 
-    mapping (address => uint[]) public asksbySeller; // [addressSeller] =>idOffer
+    mapping (address => uint[]) public asksbySeller; // [addressSeller] =>idorder
 
     address escrow;
     address owner;
@@ -52,7 +52,7 @@ contract MarketPlaceKSM is IERC721Receiver {
     }
 
     /**
-    * Make bids (offers) to sell NFTs 
+    * Make bids (orders) to sell NFTs 
     */
     function setAsk (uint256 _price, 
                     uint256  _currencyCode, 
@@ -61,9 +61,9 @@ contract MarketPlaceKSM is IERC721Receiver {
                     uint8 _active ) public  { //
         
         require (IERC721(_idCollection).ownerOf(_idNFT) == msg.sender, "Not right token owner");
-        uint offerID =  asks[msg.sender][_idCollection][_idNFT];
-        if (offers.length == 0 || offers[offerID].idCollection == address(0)){
-            offers.push(Offer(        
+        uint orderID =  asks[_idCollection][_idNFT];
+        if (orders.length == 0 || orders[orderID].idCollection == address(0)){
+            orders.push(Order(        
                     _idNFT,
                     _currencyCode,
                     _price,
@@ -72,16 +72,16 @@ contract MarketPlaceKSM is IERC721Receiver {
                     msg.sender,
                     _active
                 ));
-            asks[msg.sender][_idCollection][_idNFT] = offers.length-1;
-            asksbySeller[msg.sender].push(offers.length-1);
-            } else //edit existing offer
+            asks[_idCollection][_idNFT] = orders.length-1;
+            asksbySeller[msg.sender].push(orders.length-1);
+            } else //edit existing order
             {
-                offers[asks[msg.sender][_idCollection][_idNFT]] = Offer(        
-                    offers[asks[msg.sender][_idCollection][_idNFT]].idNFT,
+                orders[asks[_idCollection][_idNFT]] = Order(        
+                    orders[asks[_idCollection][_idNFT]].idNFT,
                     _currencyCode,
                     _price,
                     block.timestamp,
-                    offers[asks[msg.sender][_idCollection][_idNFT]].idCollection,
+                    orders[asks[_idCollection][_idNFT]].idCollection,
                     msg.sender,
                     _active);
             }
@@ -99,11 +99,11 @@ contract MarketPlaceKSM is IERC721Receiver {
 
     function buy (address _idCollection, uint256 _idNFT ) public {
         
-        Offer memory offer = offers[ asks[msg.sender][_idCollection][_idNFT]];
+        Order memory order = orders[ asks[_idCollection][_idNFT]];
         //1. reduce balance
-        balanceKSM[msg.sender][offer.currencyCode] = balanceKSM[msg.sender][offer.currencyCode].sub( offer.price, "Insuccificient KSMs funds");
-        // 2. close offer
-        offers[ asks[msg.sender][_idCollection][_idNFT]].flagActive = 0;
+        balanceKSM[msg.sender][order.currencyCode] = balanceKSM[msg.sender][order.currencyCode].sub( order.price, "Insuccificient KSMs funds");
+        // 2. close order
+        orders[ asks[_idCollection][_idNFT]].flagActive = 0;
         // 3. transfer NFT to buyer
         IERC721(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
 

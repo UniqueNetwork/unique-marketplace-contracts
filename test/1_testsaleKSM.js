@@ -32,8 +32,8 @@ contract ("MarketPlaceKSM", accounts => {
 
        assert (mpKSM.address == await t721.ownerOf(idNFT), "mpKSM.address !=  t721.ownerOf(idNFT)");
         const askID = await mpKSM.asks(accounts[0], t721.address, idNFT);
-        const offer = await mpKSM.offers(askID);
-       assert (offer.idNFT.toNumber() ==  idNFT, "offer.idNFT. !=  idNFT");
+        const order = await mpKSM.orders(askID);
+       assert (order.idNFT.toNumber() ==  idNFT, "order.idNFT. !=  idNFT");
     }),
     it ("3. make deposit", async () => { 
 
@@ -55,8 +55,8 @@ contract ("MarketPlaceKSM", accounts => {
       const balanceKSM = await mpKSM.balanceKSM(accounts[0], 1)
        assert (depoSum - price == balanceKSM.toNumber(), "depoSum - price !=  balanceKSM");
       const askID = await mpKSM.asks(accounts[0], t721.address, idNFT);
-      const offer = await mpKSM.offers(askID);
-       assert (offer.flagActive.toNumber() == 0, "offer.flagActive != 0");
+      const order = await mpKSM.orders(askID);
+       assert (order.flagActive.toNumber() == 0, "order.flagActive != 0");
        assert (accounts[0] == await t721.ownerOf(idNFT), "accounts[0] != t721.ownerOf(idNFT)");
 
 

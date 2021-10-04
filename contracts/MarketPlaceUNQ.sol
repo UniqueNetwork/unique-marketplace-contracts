@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 contract MarketPlaceUNQ is IERC721Receiver {
     using SafeMath for uint;
-    struct Offer {
+    struct Order {
         
         uint256 idNFT;
         address currencyCode; //address of currency  token, = address(0) for UNQ
@@ -18,12 +18,12 @@ contract MarketPlaceUNQ is IERC721Receiver {
         address userAddr;
         uint8 flagActive;        
     }
-    Offer[] public  offers;
+    Order[] public  orders;
 
     mapping (address => mapping (uint256 => uint256)) public balanceKSM;  //  [userAddr] => [KSMs]
-    mapping (address => mapping (address => mapping (uint256 => uint256))) public  asks ; // [buyer][idCollection][idNFT] => idOffer
+    mapping (address => mapping (uint256 => uint256)) public  asks ; // [idCollection][idNFT] => idorder
 
-    mapping (address => uint[]) public asksbySeller; // [addressSeller] =>idOffer
+    mapping (address => uint[]) public asksbySeller; // [addressSeller] =>idorder
 
     address escrow;
     address owner;
@@ -53,55 +53,63 @@ contract MarketPlaceUNQ is IERC721Receiver {
     }
 
     /**
-    * Make bids (offers) to sell NFTs 
+    * Make bids (orders) to sell NFTs 
     */
-    function setAsk (uint256 _price, 
+    function addAsk (uint256 _price, 
                     address  _currencyCode, 
                     address _idCollection, 
-                    uint256 _idNFT,
-                    uint8 _active ) public  { //
+                    uint256 _idNFT
+                     ) public  { //
         
-        require (IERC721(_idCollection).ownerOf(_idNFT) == msg.sender, "Not right token owner");
-        uint offerID =  asks[msg.sender][_idCollection][_idNFT];
-        if (offers.length == 0 || offers[offerID].idCollection == address(0)){
-            offers.push(Offer(        
+        require (IERC721(_idCollection).ownerOf(_idNFT) == msg.sender, "Only token owner can make ask");
+        
+            orders.push(Order(        
                     _idNFT,
                     _currencyCode,
                     _price,
                     block.timestamp,
                     _idCollection,
                     msg.sender,
-                    _active
+                    1 // 1 = is active
                 ));
-            asks[msg.sender][_idCollection][_idNFT] = offers.length-1;
-            asksbySeller[msg.sender].push(offers.length-1);
-            } else //edit existing offer
-            {
-                offers[asks[msg.sender][_idCollection][_idNFT]] = Offer(        
-                    offers[asks[msg.sender][_idCollection][_idNFT]].idNFT,
-                    _currencyCode,
-                    _price,
-                    block.timestamp,
-                    offers[asks[msg.sender][_idCollection][_idNFT]].idCollection,
-                    msg.sender,
-                    _active);
-            }
-
+            asks[_idCollection][_idNFT] = orders.length-1;
+            asksbySeller[msg.sender].push(orders.length-1);
             IERC721(_idCollection).transferFrom(msg.sender, address(this), _idNFT);
             
     }
 
+    function editAsk (uint256 _price, 
+                    address  _currencyCode, 
+                    address _idCollection, 
+                    uint256 _idNFT,
+                    uint8  _active) public {
+        require (IERC721(_idCollection).ownerOf(_idNFT) == msg.sender, "Only token owner can edit ask");
+
+        uint orderID =  asks[_idCollection][_idNFT];
+        require (orders[orderID].flagActive != 0, "This ask is closed");
+        if (_price> 0 ) {
+            orders[orderID].price = _price ;  
+        }
+        
+        if (_currencyCode != address(0) ) {
+            orders[orderID].currencyCode = _currencyCode ;  
+        }
+
+        orders[orderID].time = block.timestamp;
+        orders[orderID].flagActive = _active;
+        
+        }
 
 
 
     function buy (address _idCollection, uint256 _idNFT ) public payable { //buing for UNQ like as ethers 
         
-        Offer memory offer = offers[ asks[msg.sender][_idCollection][_idNFT]];
+        Order memory order = orders[asks[_idCollection][_idNFT]]; 
         //1. check sent amount and send to seller
-        require (msg.value == offer.price, "Not right amount UNQ sent, have to be equal price" );     
-        payable(offer.userAddr).transfer(offer.price); 
-        // 2. close offer
-        offers[ asks[msg.sender][_idCollection][_idNFT]].flagActive = 0;
+        require (msg.value == order.price, "Not right amount UNQ sent, have to be equal price" );     
+        payable(order.userAddr).transfer(order.price); 
+        // 2. close order
+        orders[ asks[_idCollection][_idNFT]].flagActive = 0;
         // 3. transfer NFT to buyer
         IERC721(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
 
@@ -111,14 +119,14 @@ contract MarketPlaceUNQ is IERC721Receiver {
 
     function buy (address _idCollection, uint256 _idNFT, address _currencyCode, uint _amount ) public payable {
         
-        Offer memory offer = offers[ asks[msg.sender][_idCollection][_idNFT]];
+        Order memory order = orders[ asks[_idCollection][_idNFT]];
         //1. check sent amount and transfer from buyer to seller
-        require (offer.price == _amount && offer.currencyCode == _currencyCode, "Not right amount or currency sent, have to be equal currency and price" );
+        require (order.price == _amount && order.currencyCode == _currencyCode, "Not right amount or currency sent, have to be equal currency and price" );
         // !!! transfer have to be approved to marketplace!
-        IERC20(offer.currencyCode).transferFrom(msg.sender, address(this), offer.price); //to not disclojure buyer's address 
-        IERC20(offer.currencyCode).transfer(offer.userAddr, offer.price);
-        // 2. close offer
-        offers[ asks[msg.sender][_idCollection][_idNFT]].flagActive = 0;
+        IERC20(order.currencyCode).transferFrom(msg.sender, address(this), order.price); //to not disclojure buyer's address 
+        IERC20(order.currencyCode).transfer(order.userAddr, order.price);
+        // 2. close order
+        orders[ asks[_idCollection][_idNFT]].flagActive = 0;
         // 3. transfer NFT to buyer
         IERC721(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
 
