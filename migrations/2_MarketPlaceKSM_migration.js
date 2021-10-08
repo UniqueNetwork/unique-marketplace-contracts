@@ -10,8 +10,9 @@ module.exports = async function(deployer,_network, addresses) {
    
 
       await deployer.deploy(MarketPlaceKSM, addresses[0]);
-      const mpKSM = await MarketPlaceKSM.deployed();
-      console.log ("MarketPlace:",  mpKSM.address)
+      const mp = await MarketPlaceKSM.deployed();
+      await mp.setNativeCoin(web3.utils.toChecksumAddress("0x0000000000000000000000000000000000000001"));
+      // console.log ("MarketPlace:",  mp.address)
 
   
 };

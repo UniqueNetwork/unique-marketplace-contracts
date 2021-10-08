@@ -7,7 +7,7 @@ const Token721 = artifacts.require('ERC721example.sol');
 
 
 
-contract ("MarketPlace", accounts => {
+contract ("MarketPlace for KSM", accounts => {
     var mpKSM, t721;
     const idNFT = 1234;
     const price = 1000;
@@ -42,10 +42,10 @@ contract ("MarketPlace", accounts => {
     it ("3. make deposit", async () => { 
 
         await  mpKSM.deposit (  depoSum, //
-            addrKSM, //_currencyCode
+                         //_currencyCode
                         accounts[0], //sender
                          );
-        const balanceKSM = await mpKSM.balanceKSM(accounts[0],  addrKSM,)
+        const balanceKSM = await mpKSM.balanceKSM(accounts[0])
    //     console.log ("balanceKSM", balanceKSM.toNumber());
        assert (depoSum ==  balanceKSM.toNumber(), "depoSum !=  balanceKSM");
 
@@ -56,7 +56,7 @@ contract ("MarketPlace", accounts => {
       await  mpKSM.buyKSM (t721.address, //_idCollection
                          idNFT);
     
-      const balanceKSM = await mpKSM.balanceKSM(accounts[0],  addrKSM,)
+      const balanceKSM = await mpKSM.balanceKSM(accounts[0])
        assert (depoSum - price == balanceKSM.toNumber(), "depoSum - price !=  balanceKSM");
       const askID = await mpKSM.asks( t721.address, idNFT);
       const order = await mpKSM.orders(askID);
@@ -69,10 +69,10 @@ contract ("MarketPlace", accounts => {
      it ("5. withdrawing", async () => { 
 
         await  mpKSM.withdrawKSM (depoSum-price, //_idCollection
-            addrKSM, //_currenceCode
+             //_currenceCode
                                 accounts[0]);
       
-        const balanceKSM = await mpKSM.balanceKSM(accounts[0], addrKSM)
+        const balanceKSM = await mpKSM.balanceKSM(accounts[0])
          assert ( balanceKSM.toNumber() == 0, " balanceKSM != 0");
   
   

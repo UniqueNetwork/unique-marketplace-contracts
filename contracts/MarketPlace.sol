@@ -20,13 +20,14 @@ contract MarketPlace is IERC721Receiver {
     }
     Order[] public  orders;
 
-    mapping (address => mapping (address => uint256)) public balanceKSM;  //  [ownerAddr][currency] => [KSMs]
+    mapping (address => uint256) public balanceKSM;  //  [ownerAddr][currency] => [KSMs]
     mapping (address => mapping (uint256 => uint256)) public  asks ; // [buyer][idCollection][idNFT] => idorder
 
     mapping (address => uint[]) public asksbySeller; // [addressSeller] =>idorder
 
     address escrow;
     address owner;
+    address nativecoin;
 
     constructor (address _escrow) {
         escrow = _escrow;
@@ -41,6 +42,12 @@ contract MarketPlace is IERC721Receiver {
     function setEscrow  (address _newEscrow) public onlyOwner {
         escrow = _newEscrow;
     }
+
+    function setNativeCoin  (address _coin) public onlyOwner {
+        nativecoin = _coin;
+    }
+
+    
 
     modifier onlyEscrow () {
         require(msg.sender == escrow, "Only escrow can");
@@ -112,9 +119,9 @@ contract MarketPlace is IERC721Receiver {
 
 
 
-    function deposit (uint256 _amount, address _currencyCode, address _sender) public onlyEscrow {
+    function deposit (uint256 _amount,  address _sender) public onlyEscrow {
 
-        balanceKSM[_sender][_currencyCode]= balanceKSM[_sender][_currencyCode].add(_amount);
+        balanceKSM[_sender]= balanceKSM[_sender].add(_amount);
 
     }
 
@@ -122,7 +129,7 @@ contract MarketPlace is IERC721Receiver {
         
         Order memory order = orders[ asks[_idCollection][_idNFT]];
         //1. reduce balance
-        balanceKSM[msg.sender][order.currencyCode] = balanceKSM[msg.sender][order.currencyCode].sub( order.price, "Insuccificient KSMs funds");
+        balanceKSM[msg.sender] = balanceKSM[msg.sender].sub( order.price, "Insuccificient KSMs funds");
         // 2. close order
         orders[ asks[_idCollection][_idNFT]].flagActive = 0;
         // 3. transfer NFT to buyer
@@ -130,22 +137,24 @@ contract MarketPlace is IERC721Receiver {
 
 
     }
-    function buyUNQ (address _idCollection, uint256 _idNFT ) public payable { //buing for UNQ like as ethers 
+    function buy (address _idCollection, uint256 _idNFT ) public payable { //buing for UNQ like as ethers 
         
         Order memory order = orders[asks[_idCollection][_idNFT]]; 
         //1. check sent amount and send to seller
-        require (msg.value == order.price, "Not right amount UNQ sent, have to be equal price" );     
-        payable(order.ownerAddr).transfer(order.price); 
+        require (msg.value == order.price, "Not right amount sent, have to be equal price" );     
         // 2. close order
         orders[ asks[_idCollection][_idNFT]].flagActive = 0;
+        
         // 3. transfer NFT to buyer
         IERC721(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
-
-
+        uint balance  = address(this).balance;
+        bool result = payable(order.ownerAddr).send (order.price); 
+        
+        return;
     }
 
-
-    function buy (address _idCollection, uint256 _idNFT, address _currencyCode, uint _amount ) public payable {
+/* 
+    function buyOther (address _idCollection, uint256 _idNFT, address _currencyCode, uint _amount ) public  { //buy for sny token if seller wants
         
         Order memory order = orders[ asks[_idCollection][_idNFT]];
         //1. check sent amount and transfer from buyer to seller
@@ -160,20 +169,23 @@ contract MarketPlace is IERC721Receiver {
 
 
     }
+ */
 
-
-    function withdrawKSM (uint256 _amount, address _currencyCode, address _sender) public  onlyEscrow returns (bool ){
-        balanceKSM[_sender][_currencyCode] = balanceKSM[_sender][_currencyCode].sub( _amount, "Insuccificient KSMs balance");
+    function withdrawKSM (uint256 _amount, address _sender) public  onlyEscrow returns (bool ){
+        balanceKSM[_sender] = balanceKSM[_sender].sub( _amount, "Insuccificient KSMs balance");
         return true;
 
     }
 
-    function withdraw (uint256 _amount, address _currencyCode, address payable _sender) public  onlyEscrow returns (bool ){
-        balanceKSM[_sender][_currencyCode] = balanceKSM[_sender][_currencyCode].sub( _amount, "Insuccificient balance");
-        if (_currencyCode !=address (1)) { //erc20 compat. tokens on UNIQUE chain
+    function withdraw (uint256 _amount, address _currencyCode, address payable _sender) public  onlyOwner returns (bool ){
+        
+        if (_currencyCode != nativecoin ) { //erc20 compat. tokens on UNIQUE chain
+            uint balance = IERC20(_currencyCode).balanceOf(address(this));
             IERC20(_currencyCode).transfer(_sender, _amount);
         } else {
-            (_sender).transfer(_amount); // for UNQ like as ethers 
+            uint balance  = address(this).balance;
+
+            bool result =  (_sender).send(_amount); // for UNQ like as ethers 
         }
         return true;
 
