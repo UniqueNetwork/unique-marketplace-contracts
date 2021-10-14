@@ -117,6 +117,20 @@ contract MarketPlace is IERC721Receiver {
         
         }
 
+    function cancelAsk (address _idCollection, 
+                        uint256 _idNFT
+                        ) public {
+
+        uint orderID =  asks[_idCollection][_idNFT];
+
+        require (orders[orderID].ownerAddr == msg.sender, "Only token owner can edit ask");
+        require (orders[orderID].flagActive != 0, "This ask is closed");
+
+        orders[orderID].time = block.timestamp;
+        orders[orderID].flagActive = 0;
+        IERC721(_idCollection).transferFrom(address(this),orders[orderID].ownerAddr, _idNFT);
+        
+        }
 
 
     function deposit (uint256 _amount,  address _sender) public onlyEscrow {
@@ -171,10 +185,9 @@ contract MarketPlace is IERC721Receiver {
     }
  */
 
-    function withdrawKSM (uint256 _amount, address _sender) public  onlyEscrow returns (bool ){
-        balanceKSM[_sender] = balanceKSM[_sender].sub( _amount, "Insuccificient KSMs balance");
-        return true;
-
+    function withdrawAllKSM (address _sender) public  onlyEscrow returns (uint lastBalance ){
+        lastBalance = balanceKSM[_sender];
+        balanceKSM[_sender] =0;
     }
 
     function withdraw (uint256 _amount, address _currencyCode, address payable _sender) public  onlyOwner returns (bool ){
