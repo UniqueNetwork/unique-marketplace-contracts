@@ -41,7 +41,7 @@ contract ("MarketPlace for KSM", accounts => {
     }),
     it ("3. make deposit", async () => { 
 
-        await  mpKSM.deposit (  depoSum, //
+        await  mpKSM.depositKSM (  depoSum, //
                          //_currencyCode
                         accounts[0], //sender
                          );
@@ -68,9 +68,7 @@ contract ("MarketPlace for KSM", accounts => {
 
      it ("5. withdrawing", async () => { 
 
-        await  mpKSM.withdrawKSM (depoSum-price, //_idCollection
-             //_currenceCode
-                                accounts[0]);
+        await  mpKSM.withdrawAllKSM (accounts[0]);
       
         const balanceKSM = await mpKSM.balanceKSM(accounts[0])
          assert ( balanceKSM.toNumber() == 0, " balanceKSM != 0");

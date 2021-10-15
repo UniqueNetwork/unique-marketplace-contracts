@@ -70,6 +70,34 @@ contract MarketPlace is IERC721Receiver {
         revert ("No such function");
     }
 
+    event AddedAsk (uint256 _price, 
+                    address  _currencyCode, 
+                    address _idCollection, 
+                    uint256 _idNFT,
+                    uint256 orderId
+                  );
+    event EditedAsk (uint256 _price, 
+                    address  _currencyCode, 
+                    address _idCollection, 
+                    uint256 _idNFT,
+                    uint8  _active,
+                    uint orderId);
+
+    event  CanceledAsk (address _idCollection, 
+                        uint256 _idNFT, 
+                        uint orderId
+                        );
+
+    event DepositedKSM (uint256 _amount,  address _sender);
+
+    event BoughtNFT4KSM (address _idCollection, uint256 _idNFT, uint orderID, uint orderPrice );
+
+    event BoughtNFT (address _idCollection, uint256 _idNFT, uint orderID, uint orderPrice );
+
+    event WithdrawnAllKSM (address _sender, uint256 balance); 
+
+    event Withdrawn (uint256 _amount, address _currencyCode, address _sender);
+    
     function addAsk (uint256 _price, 
                     address  _currencyCode, 
                     address _idCollection, 
@@ -87,10 +115,11 @@ contract MarketPlace is IERC721Receiver {
                     msg.sender,
                     1 // 1 = is active
              ));
-            asks[_idCollection][_idNFT] = orders.length-1;
-            asksbySeller[msg.sender].push(orders.length-1);
+            uint orderId = orders.length-1;
+            asks[_idCollection][_idNFT] = orderId;
+            asksbySeller[msg.sender].push(orderId);
             IERC721(_idCollection).transferFrom(msg.sender, address(this), _idNFT);
-            
+            emit AddedAsk(_price, _currencyCode, _idCollection, _idNFT, orderId);     
     }
 
     function editAsk (uint256 _price, 
@@ -115,7 +144,9 @@ contract MarketPlace is IERC721Receiver {
         orders[orderID].time = block.timestamp;
         orders[orderID].flagActive = _active;
         
+        emit EditedAsk(_price, _currencyCode, _idCollection, _idNFT, _active, orderID);
         }
+        
 
     function cancelAsk (address _idCollection, 
                         uint256 _idNFT
@@ -129,14 +160,14 @@ contract MarketPlace is IERC721Receiver {
         orders[orderID].time = block.timestamp;
         orders[orderID].flagActive = 0;
         IERC721(_idCollection).transferFrom(address(this),orders[orderID].ownerAddr, _idNFT);
-        
+        emit CanceledAsk(_idCollection, _idNFT, orderID);
         }
 
 
-    function deposit (uint256 _amount,  address _sender) public onlyEscrow {
+    function depositKSM (uint256 _amount,  address _sender) public onlyEscrow {
 
         balanceKSM[_sender]= balanceKSM[_sender].add(_amount);
-
+        emit DepositedKSM(_amount, _sender);
     }
 
     function buyKSM (address _idCollection, uint256 _idNFT ) public {
@@ -148,10 +179,10 @@ contract MarketPlace is IERC721Receiver {
         orders[ asks[_idCollection][_idNFT]].flagActive = 0;
         // 3. transfer NFT to buyer
         IERC721(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
-
+        emit BoughtNFT4KSM(_idCollection, _idNFT, asks[_idCollection][_idNFT], order.price);
 
     }
-    function buy (address _idCollection, uint256 _idNFT ) public payable { //buing for UNQ like as ethers 
+    function buy (address _idCollection, uint256 _idNFT ) public payable returns (bool result) { //buing for UNQ like as ethers 
         
         Order memory order = orders[asks[_idCollection][_idNFT]]; 
         //1. check sent amount and send to seller
@@ -161,10 +192,10 @@ contract MarketPlace is IERC721Receiver {
         
         // 3. transfer NFT to buyer
         IERC721(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
-        uint balance  = address(this).balance;
-        bool result = payable(order.ownerAddr).send (order.price); 
+        //uint balance  = address(this).balance;
+        result = payable(order.ownerAddr).send (order.price); 
+        emit BoughtNFT(_idCollection, _idNFT, asks[_idCollection][_idNFT], order.price);
         
-        return;
     }
 
 /* 
@@ -188,19 +219,21 @@ contract MarketPlace is IERC721Receiver {
     function withdrawAllKSM (address _sender) public  onlyEscrow returns (uint lastBalance ){
         lastBalance = balanceKSM[_sender];
         balanceKSM[_sender] =0;
+        emit WithdrawnAllKSM(_sender, lastBalance);
     }
 
-    function withdraw (uint256 _amount, address _currencyCode, address payable _sender) public  onlyOwner returns (bool ){
+    function withdraw (uint256 _amount, address _currencyCode, address payable _sender) public  onlyOwner returns (bool result ){
         
         if (_currencyCode != nativecoin ) { //erc20 compat. tokens on UNIQUE chain
-            uint balance = IERC20(_currencyCode).balanceOf(address(this));
+            // uint balance = IERC20(_currencyCode).balanceOf(address(this));
             IERC20(_currencyCode).transfer(_sender, _amount);
         } else {
-            uint balance  = address(this).balance;
+            // uint balance  = address(this).balance;
 
-            bool result =  (_sender).send(_amount); // for UNQ like as ethers 
+            result =  (_sender).send(_amount); // for UNQ like as ethers 
         }
-        return true;
+        emit Withdrawn(_amount, _currencyCode, _sender);
+        return result;
 
     }
 
