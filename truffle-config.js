@@ -57,7 +57,7 @@ module.exports = {
           network_id: 8888,
           deploymentPollingInterval: 10000
           /**
-* ganache-cli -m " " -i 999 -p 8545 -u 0xa0df350d2637096571F7A701CBc1C5fdE30dF76A --db ../ganache_local3 --allowUnlimitedContractSize  -g 0 -e 1000
+* ganache-cli -m "clutch captain shoe salt awake harvest setup primary inmate ugly among become" -i 999 -p 8545 -u 0xa0df350d2637096571F7A701CBc1C5fdE30dF76A --db ../ganache_local3 --allowUnlimitedContractSize  -g 0 -e 1000
 * 0xa0df350d2637096571F7A701CBc1C5fdE30dF76A
 * b8c1b5c1d81f9475fdf2e334517d29f733bdfa40682207571b12fc1142cbf329
 * 5H9kK46KadoBKXGbhufTcB6ujAMfuQYt7zGB9rjEV6KumKzi
