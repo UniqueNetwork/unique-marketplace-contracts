@@ -1,6 +1,6 @@
 // SPDX-License-Identifier:  Apache License
 pragma solidity >= 0.8.0;
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "./interfaces/IERC721ext.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -16,10 +16,13 @@ contract MarketPlace is IERC721Receiver {
         uint256 time;
         address idCollection;
         address ownerAddr;
-        uint8 flagActive;        
+        uint8 flagActive;
+        string name;
+        string symbol;
+        string tokenURI;        
     }
     Order[] public  orders;
-
+    uint test;
     mapping (address => uint256) public balanceKSM;  //  [ownerAddr][currency] => [KSMs]
     mapping (address => mapping (uint256 => uint256)) public  asks ; // [buyer][idCollection][idNFT] => idorder
 
@@ -33,6 +36,14 @@ contract MarketPlace is IERC721Receiver {
         escrow = _escrow;
         owner = msg.sender;
 
+         orders.push(Order(        
+                    0,
+                    address(0),
+                    0,
+                    0,
+                    address(0),
+                    address(0),
+                    0, "","",""));
     }
 
    function setowner  (address _newEscrow) public onlyOwner {
@@ -103,22 +114,46 @@ contract MarketPlace is IERC721Receiver {
                     address _idCollection, 
                     uint256 _idNFT
                   ) public  { //
-        address ownerNFT = IERC721(_idCollection).ownerOf(_idNFT);
+        address ownerNFT = IERC721ext(_idCollection).ownerOf(_idNFT);
         require (ownerNFT == msg.sender, "Only token owner can make ask");
-        
-            orders.push(Order(        
+        string memory nameNFT;
+        string memory symbolNFT;
+        string memory uriNFT;
+        try IERC721ext(_idCollection).name() returns (string memory name_) {
+            nameNFT = name_;
+        }
+        catch {
+            nameNFT="";
+        }   
+        try IERC721ext(_idCollection).symbol() returns (string memory symbol_) {
+            symbolNFT = symbol_;
+        }
+        catch {
+            symbolNFT="";
+        }  
+        try IERC721ext(_idCollection).tokenURI(_idNFT) returns (string memory uri_) {
+            uriNFT = uri_;
+        }
+        catch {
+            uriNFT="";
+        }        
+        orders.push(Order(        
                     _idNFT,
                     _currencyCode,
                     _price,
                     block.timestamp,
                     _idCollection,
                     msg.sender,
-                    1 // 1 = is active
+                    1, // 1 = is active
+                    nameNFT, 
+                    symbolNFT,
+                    uriNFT
              ));
+            
             uint orderId = orders.length-1;
             asks[_idCollection][_idNFT] = orderId;
             asksbySeller[msg.sender].push(orderId);
-            IERC721(_idCollection).transferFrom(msg.sender, address(this), _idNFT);
+            IERC721ext(_idCollection).transferFrom(msg.sender, address(this), _idNFT);
             emit AddedAsk(_price, _currencyCode, _idCollection, _idNFT, orderId);     
     }
 
@@ -159,7 +194,7 @@ contract MarketPlace is IERC721Receiver {
 
         orders[orderID].time = block.timestamp;
         orders[orderID].flagActive = 0;
-        IERC721(_idCollection).transferFrom(address(this),orders[orderID].ownerAddr, _idNFT);
+        IERC721ext(_idCollection).transferFrom(address(this),orders[orderID].ownerAddr, _idNFT);
         emit CanceledAsk(_idCollection, _idNFT, orderID);
         }
 
@@ -178,7 +213,7 @@ contract MarketPlace is IERC721Receiver {
         // 2. close order
         orders[ asks[_idCollection][_idNFT]].flagActive = 0;
         // 3. transfer NFT to buyer
-        IERC721(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
+        IERC721ext(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
         emit BoughtNFT4KSM(_idCollection, _idNFT, asks[_idCollection][_idNFT], order.price);
 
     }
@@ -191,7 +226,7 @@ contract MarketPlace is IERC721Receiver {
         orders[ asks[_idCollection][_idNFT]].flagActive = 0;
         
         // 3. transfer NFT to buyer
-        IERC721(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
+        IERC721ext(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
         //uint balance  = address(this).balance;
         result = payable(order.ownerAddr).send (order.price); 
         emit BoughtNFT(_idCollection, _idNFT, asks[_idCollection][_idNFT], order.price);
@@ -210,7 +245,7 @@ contract MarketPlace is IERC721Receiver {
         // 2. close order
         orders[ asks[_idCollection][_idNFT]].flagActive = 0;
         // 3. transfer NFT to buyer
-        IERC721(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
+        IERC721ext(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
 
 
     }
@@ -235,6 +270,17 @@ contract MarketPlace is IERC721Receiver {
         emit Withdrawn(_amount, _currencyCode, _sender);
         return result;
 
+    }
+   // event GettedOrder(uint , Order);
+    function getOrder (address _idCollection, uint256 _idNFT) public view returns (Order memory) {
+        uint orderId = asks[_idCollection][_idNFT];
+        Order memory order = orders[orderId];
+ //       emit GettedOrder (orderId, order);
+        return order;
+    }
+
+    function getOrdersLen () public view returns (uint) {
+        return orders.length;
     }
 
     function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data)  public override pure returns(bytes4) {
