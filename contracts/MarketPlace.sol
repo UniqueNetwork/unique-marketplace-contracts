@@ -205,15 +205,16 @@ contract MarketPlace is IERC721Receiver {
         emit DepositedKSM(_amount, _sender);
     }
 
-    function buyKSM (address _idCollection, uint256 _idNFT ) public {
+    function buyKSM (address _idCollection, uint256 _idNFT, address _buyer, address _receiver ) public {
         
         Order memory order = orders[ asks[_idCollection][_idNFT]];
         //1. reduce balance
-        balanceKSM[msg.sender] = balanceKSM[msg.sender].sub( order.price, "Insuccificient KSMs funds");
+        balanceKSM[_buyer] = balanceKSM[_buyer].sub( order.price, "Insuccificient KSMs funds");
+        balanceKSM[order.ownerAddr] = balanceKSM[order.ownerAddr].add( order.price);
         // 2. close order
         orders[ asks[_idCollection][_idNFT]].flagActive = 0;
         // 3. transfer NFT to buyer
-        IERC721ext(_idCollection).transferFrom(address(this), msg.sender, _idNFT);
+        IERC721ext(_idCollection).transferFrom(address(this), _receiver, _idNFT);
         emit BoughtNFT4KSM(_idCollection, _idNFT, asks[_idCollection][_idNFT], order.price);
 
     }

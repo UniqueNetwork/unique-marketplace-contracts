@@ -21,7 +21,7 @@ contract ("MarketPlace for KSM", accounts => {
         await t721.mint(accounts[0], idNFT);
        assert (accounts[0] == await t721.ownerOf(idNFT), "accounts[0] !=  t721.ownerOf(idNFT)");
        let fs = require('fs');
-        fs.writeFile("./contr.json", JSON.stringify({"ERC721":t721.address, "tokenID":idNFT,  "account": accounts[0]}), function(err) {
+        fs.writeFile("./contr.json", JSON.stringify({"ERC721":t721.address, "tokenID":idNFT,  "account": accounts[0], "price": price }), function(err) {
           if (err) {
               console.log(err);
           }
