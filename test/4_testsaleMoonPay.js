@@ -9,7 +9,7 @@ const Token721 = artifacts.require('ERC721example.sol');
 
 contract ("MarketPlace for KSM", accounts => {
     var mpKSM, t721;
-    const idNFT = 1234;
+    const idNFT = 1235;
     const price = 1000;
     const depoSum = 1500;
     const addrKSM = web3.utils.toChecksumAddress("0x0000000000000000000000000000000000000002")
