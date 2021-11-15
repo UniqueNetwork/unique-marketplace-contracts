@@ -40811,14 +40811,245 @@
   },
   "networks": {
     "8888": {
-      "events": {},
+      "events": {
+        "0x83b3a8754d705365b581ab63c329c1e55255a22aa78c67b5fcef378bfb2d9b99": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "_price",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "_currencyCode",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "_idCollection",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "_idNFT",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "orderId",
+              "type": "uint256"
+            }
+          ],
+          "name": "AddedAsk",
+          "type": "event"
+        },
+        "0xc220cf2a12d6492e23ed1141c55018997799699d009b00ebd5a4874c60f5c31e": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "_idCollection",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "_idNFT",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "orderID",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "orderPrice",
+              "type": "uint256"
+            }
+          ],
+          "name": "BoughtNFT",
+          "type": "event"
+        },
+        "0x68bdd3548f3f05742b376651745ca73472eb18f2230f64b893d7a48e575eb014": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "_idCollection",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "_idNFT",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "orderID",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "orderPrice",
+              "type": "uint256"
+            }
+          ],
+          "name": "BoughtNFT4KSM",
+          "type": "event"
+        },
+        "0x6330f58b476cc7f9dd8db8130a0fbb49b291ebc32531eb36e9646f56ee20174b": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "_idCollection",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "_idNFT",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "orderId",
+              "type": "uint256"
+            }
+          ],
+          "name": "CanceledAsk",
+          "type": "event"
+        },
+        "0x291ce0b690061cb1b3f1111bf6500efe526983251fb0f863251ec3670d035fc4": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "_amount",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "_sender",
+              "type": "address"
+            }
+          ],
+          "name": "DepositedKSM",
+          "type": "event"
+        },
+        "0x04211d838289b72af597bf28a4ccff5a30d6056f5fce2eddb127ab4ffea0963d": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "_price",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "_currencyCode",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "_idCollection",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "_idNFT",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint8",
+              "name": "_active",
+              "type": "uint8"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "orderId",
+              "type": "uint256"
+            }
+          ],
+          "name": "EditedAsk",
+          "type": "event"
+        },
+        "0xb524bace85e4ce0f8da306e32f39263c5724780ca00b7551c051c8e3dc36adaf": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "_amount",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "_currencyCode",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "_sender",
+              "type": "address"
+            }
+          ],
+          "name": "Withdrawn",
+          "type": "event"
+        },
+        "0x027aeacbc6fbfa7fe735ff8f14a600469ad1a3197ce1c8c8a159641cf68fe592": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "_sender",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "balance",
+              "type": "uint256"
+            }
+          ],
+          "name": "WithdrawnAllKSM",
+          "type": "event"
+        }
+      },
       "links": {},
       "address": "0xc96E34C891c6f4f6fcD5dC870cA04f1c3A895378",
       "transactionHash": "0x32750768b06d9050a4152203666d743fca5941881a709b850e2b4c19ed51705a"
     }
   },
   "schemaVersion": "3.4.3",
-  "updatedAt": "2021-11-03T14:07:48.447Z",
+  "updatedAt": "2021-11-10T15:34:12.999Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",

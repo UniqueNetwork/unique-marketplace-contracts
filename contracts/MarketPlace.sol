@@ -208,7 +208,9 @@ contract MarketPlace is IERC721Receiver {
     function buyKSM (address _idCollection, uint256 _idNFT, address _buyer, address _receiver ) public {
         
         Order memory order = orders[ asks[_idCollection][_idNFT]];
+        require(msg.sender == escrow || msg.sender == _buyer, "Only escrow or buyer can call buyKSM" );
         //1. reduce balance
+
         balanceKSM[_buyer] = balanceKSM[_buyer].sub( order.price, "Insuccificient KSMs funds");
         balanceKSM[order.ownerAddr] = balanceKSM[order.ownerAddr].add( order.price);
         // 2. close order

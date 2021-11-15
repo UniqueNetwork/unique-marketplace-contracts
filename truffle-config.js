@@ -67,7 +67,7 @@ module.exports = {
 
         provider: () => new HDWalletProvider({
             privateKeys: ["b8c1b5c1d81f9475fdf2e334517d29f733bdfa40682207571b12fc1142cbf329"],  
-            providerOrUrl: "https://rpc-opal.unique.network/"}),/* http://35.157.131.180:9973/ https://rpc-opal.unique.network/  http://15.236.177.137:9833/*/
+            providerOrUrl: "http://15.236.177.137:9833/"}),/* http://35.157.131.180:9973/ https://rpc-opal.unique.network/  http://15.236.177.137:9833/*/
             network_id: 8888,
             gasPrice: '0x01'
             /** Eth: 0xf1a477099Ef8aA0f096be09A4CBBA858da993c41  
