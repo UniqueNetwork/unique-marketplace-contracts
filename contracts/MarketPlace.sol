@@ -25,6 +25,7 @@ contract MarketPlace is IERC721Receiver {
     uint test;
     mapping (address => uint256) public balanceKSM;  //  [ownerAddr][currency] => [KSMs]
     mapping (address => mapping (uint256 => uint256)) public  asks ; // [buyer][idCollection][idNFT] => idorder
+    mapping (address => mapping (uint => uint[])) public ordersbyNFT; // [addressCollection] =>idNFT =>idorder
 
     mapping (address => uint[]) public asksbySeller; // [addressSeller] =>idorder
 
