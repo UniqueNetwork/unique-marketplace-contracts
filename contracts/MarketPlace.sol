@@ -48,7 +48,7 @@ contract MarketPlace is IERC721Receiver {
     }
 
    function setowner  (address _newEscrow) public onlyOwner {
-        escrow = _newEscrow;
+        owner = _newEscrow;
     }
 
     function setEscrow  (address _newEscrow) public onlyOwner {
