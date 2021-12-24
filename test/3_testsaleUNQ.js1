@@ -29,7 +29,7 @@ contract ("MarketPlace for UNQ", accounts => {
                erc, //_currencyCode
                t721.address, //_idCollection
                idNFT,
-                {from: accounts[0], gasPrice: "0x01"}
+                {from: accounts[0], /* gasPrice: "0x01" */}
                 );
 
        assert (mp.address == await t721.ownerOf(idNFT), "mp.address !=  t721.ownerOf(idNFT)");
@@ -44,7 +44,7 @@ contract ("MarketPlace for UNQ", accounts => {
                 t721.address,
                 idNFT,
                 1,
-                {from: accounts[0], gasPrice: "0x01"}  );
+                {from: accounts[0], /* gasPrice: "0x01" */}  );
         const askID = await mp.asks(t721.address, idNFT);
         const order = await mp.orders(askID);
        assert (order.price  ==  price2, "price didn't changed");
@@ -55,7 +55,7 @@ contract ("MarketPlace for UNQ", accounts => {
       const tx= await  mp.buy  (t721.address, //_idCollection
                                 idNFT,
                                 { from: accounts[0], 
-                                gasPrice: "0x01", 
+                               /*  gasPrice: "0x01", */ 
                                 value: price2 }  );
       const askID = await mp.asks( t721.address, idNFT);
       const order = await mp.orders(askID);

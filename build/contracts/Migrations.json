@@ -2194,12 +2194,12 @@
     "8888": {
       "events": {},
       "links": {},
-      "address": "0x9C5Dd70D98e9B321217e8232235e25E64E78C595",
-      "transactionHash": "0xdce359dd7c2d2f848d03fd9fb392ad178df53a5e26513e41e17c15a7eff6a351"
+      "address": "0x283C31A85980233764997390BD32377eE7170CF4",
+      "transactionHash": "0xab1c30c56a9a3127c52ebdf25eac7ecefc88e87e9d6d17126d01df4d6373d3be"
     }
   },
-  "schemaVersion": "3.4.3",
-  "updatedAt": "2021-11-25T15:01:01.076Z",
+  "schemaVersion": "3.4.4",
+  "updatedAt": "2021-12-23T13:37:54.295Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",
