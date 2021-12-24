@@ -4,9 +4,10 @@ import "./interfaces/IERC721ext.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 
-contract MarketPlace is IERC721Receiver {
+contract MarketPlace is IERC721Receiver, ReentrancyGuard {
     using SafeMath for uint;
     struct Order {
         
@@ -255,14 +256,14 @@ contract MarketPlace is IERC721Receiver {
     }
  */
 
-    function withdrawAllKSM (address _sender) public  onlyEscrow returns (uint lastBalance ){
+    function withdrawAllKSM (address _sender) public  onlyEscrow nonReentrant returns (uint lastBalance ){
         lastBalance = balanceKSM[_sender];
         balanceKSM[_sender] =0;
         emit WithdrawnAllKSM(_sender, lastBalance);
     }
 
-    function withdraw (uint256 _amount, address _currencyCode, address payable _sender) public  onlyOwner returns (bool result ){
-        
+    function withdraw (uint256 _amount, address _currencyCode) public  nonReentrant returns (bool result ){ //onlyOwner
+        address payable _sender = payable( msg.sender);
         if (_currencyCode != nativecoin ) { //erc20 compat. tokens on UNIQUE chain
             // uint balance = IERC20(_currencyCode).balanceOf(address(this));
             IERC20(_currencyCode).transfer(_sender, _amount);
