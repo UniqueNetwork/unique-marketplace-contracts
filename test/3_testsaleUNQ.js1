@@ -68,8 +68,8 @@ contract ("MarketPlace for UNQ", accounts => {
     it ("5. withdrawing", async () => { 
 
         await  mp.withdraw (price2, 
-                erc, //_currencyCode
-                accounts[0]);
+                erc //_currencyCode
+                );
       
         const balanceKSM = await mp.balanceKSM(accounts[0])
          assert ( balanceKSM.toNumber() == 0, " balanceKSM != 0");
