@@ -4,7 +4,9 @@ import "./interfaces/IERC721ext.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./ReentrancyGuard.sol";
+
+import "./Initializable.sol";
 
 
 contract MarketPlace is IERC721Receiver, ReentrancyGuard {
@@ -34,9 +36,11 @@ contract MarketPlace is IERC721Receiver, ReentrancyGuard {
     address owner;
     address nativecoin;
 
-    constructor (address _escrow) {
+    //constructor (address _escrow) {
+     function initialize(address _owner, address _escrow) public initializer {
+   
         escrow = _escrow;
-        owner = msg.sender;
+        owner = _owner;
 
          orders.push(Order(        
                     0,

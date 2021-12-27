@@ -29,5 +29,8 @@
   "bugs": {
     "url": "https://github.com/usetech-llc/marketplace_backend/issues"
   },
-  "homepage": "https://github.com/usetech-llc/marketplace_backend#readme"
+  "homepage": "https://github.com/usetech-llc/marketplace_backend#readme",
+  "devDependencies": {
+    "@openzeppelin/truffle-upgrades": "^1.11.0"
+  }
 }

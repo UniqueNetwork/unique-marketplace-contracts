@@ -54,7 +54,7 @@ contract ("MarketPlace for KSM", accounts => {
     it ("4. buying", async () => { 
 
       await  mpKSM.buyKSM (t721.address, //_idCollection
-                         idNFT);
+                         idNFT, accounts[0], accounts[0]);
     
       const balanceKSM = await mpKSM.balanceKSM(accounts[0])
        assert (depoSum - price == balanceKSM.toNumber(), "depoSum - price !=  balanceKSM");
