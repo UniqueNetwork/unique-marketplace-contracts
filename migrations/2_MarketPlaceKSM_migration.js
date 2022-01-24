@@ -1,25 +1,43 @@
 
+const upgradeFlag= false; // change to true when upgrading
+
 //const BridgeGate = artifacts.require('BridgeGate.sol');
 const MarketPlaceKSM = artifacts.require('MarketPlace.sol');
 
 const { deployProxy } = require('@openzeppelin/truffle-upgrades');
+const { upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 
 
 var mp;
 //const ERC721example = artifacts.require('ERC721example.sol');
 
-
 module.exports = async function(deployer,_network, addresses) {
-   
-      const networkId = await web3.eth.net.getId();     
-      //await deployer.deploy(MarketPlaceKSM, addresses[0]);
-      // const mp = await MarketPlaceKSM.deployed();
+      const networkId = await web3.eth.net.getId(); 
+      if (upgradeFlag)  {
+        const MarketPlaceKSMnew = artifacts.require('MarketPlace_new.sol');
+        const networkId = await web3.eth.net.getId();     
+        //await deployer.deploy(MarketPlaceKSM, addresses[0]);
+        // const mp = await MarketPlaceKSM.deployed();
+        // upgradable deploys
+        
+        // upgrade branch https://forum.openzeppelin.com/t/openzeppelin-upgrades-step-by-step-tutorial-for-truffle/3579
+             // docs: https://docs.openzeppelin.com/upgrades-plugins/1.x/  
+          
+          const existing = await MarketPlaceKSM.deployed();
+          mp = await upgradeProxy(existing.address, MarketPlaceKSMnew, { deployer });
+          console.log("Upgraded", mp.address);
+      
+    }
+    else  {    
+      await deployer.deploy(MarketPlaceKSM, addresses[0], addresses[0]);
+       mp = await MarketPlaceKSM.deployed();
+      console.log ("MarketPlace:",  mp.address)
+       
       // upgradable deploys
-
-        mp = await deployProxy(MarketPlaceKSM, addresses[0], addresses[0], { deployer });
-        console.log('Deployed upgradable: ', mp.address);
-      // console.log ("MarketPlace:",  mp.address)
-      await mp.setNativeCoin(web3.utils.toChecksumAddress("0x0000000000000000000000000000000000000001"));
+      //mp = await deployProxy(MarketPlaceKSM, addresses[0], addresses[0], { deployer, from: addresses[0] });
+      //console.log('Deployed upgradable: ', mp.address);
+    }
+      await mp.setNativeCoin(web3.utils.toChecksumAddress("0x0000000000000000000000000000000000000001"), {from: addresses[0]});
         var addresses = require ("../addresses.json");
       addresses[networkId].marketplace = mp.address;
       addresses[networkId].account = addresses[0];

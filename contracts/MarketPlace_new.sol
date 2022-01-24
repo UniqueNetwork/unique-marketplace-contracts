@@ -9,7 +9,7 @@ import "./ReentrancyGuard.sol";
 import "./Initializable.sol";
 
 
-contract MarketPlace is IERC721Receiver, ReentrancyGuard {
+contract MarketPlace_new is IERC721Receiver, ReentrancyGuard {
     using SafeMath for uint;
     struct Order {
         
@@ -32,16 +32,14 @@ contract MarketPlace is IERC721Receiver, ReentrancyGuard {
 
     mapping (address => uint[]) public asksbySeller; // [addressSeller] =>idorder
 
-    mapping (address =>bool) internal isEscrow;
-
-    //address escrow;
+    address escrow;
     address owner;
     address nativecoin;
 
-    constructor (address _owner, address _escrow) {
-    // function initialize(address _owner, address _escrow) public initializer {
+    //constructor (address _escrow) {
+     function initialize(address _owner, address _escrow) public initializer {
    
-        isEscrow [_escrow] = true;
+        escrow = _escrow;
         owner = _owner;
 
          orders.push(Order(        
@@ -58,12 +56,8 @@ contract MarketPlace is IERC721Receiver, ReentrancyGuard {
         owner = _newEscrow;
     }
 
-    function setEscrow  (address _escrow, bool _state) public onlyOwner returns (bool) {
-        if (isEscrow[_escrow] != _state)  {
-            isEscrow[_escrow] = _state;
-            return true;
-        }
-        return false;
+    function setEscrow  (address _newEscrow) public onlyOwner {
+        escrow = _newEscrow;
     }
 
     function setNativeCoin  (address _coin) public onlyOwner {
@@ -73,7 +67,7 @@ contract MarketPlace is IERC721Receiver, ReentrancyGuard {
     
 
     modifier onlyEscrow () {
-        require(isEscrow [msg.sender] , "Only escrow can");
+        require(msg.sender == escrow, "Only escrow can");
         _;
     }
 
@@ -119,8 +113,6 @@ contract MarketPlace is IERC721Receiver, ReentrancyGuard {
 
     event WithdrawnAllKSM (address _sender, uint256 balance); 
 
-    event WithdrawnKSM (address _sender, uint256 balance); 
-
     event Withdrawn (uint256 _amount, address _currencyCode, address _sender);
     
     function addAsk (uint256 _price, 
@@ -129,7 +121,7 @@ contract MarketPlace is IERC721Receiver, ReentrancyGuard {
                     uint256 _idNFT
                   ) public  { //
         address ownerNFT = IERC721ext(_idCollection).ownerOf(_idNFT);
-        require (ownerNFT == msg.sender, "Only token owner can make ask");
+        require (ownerNFT == msg.sender, "Only token owner can make ask everytime");
         string memory nameNFT;
         string memory symbolNFT;
         string memory uriNFT;
@@ -222,7 +214,7 @@ contract MarketPlace is IERC721Receiver, ReentrancyGuard {
     function buyKSM (address _idCollection, uint256 _idNFT, address _buyer, address _receiver ) public {
         
         Order memory order = orders[ asks[_idCollection][_idNFT]];
-        require(isEscrow[msg.sender]  || msg.sender == _buyer, "Only escrow or buyer can call buyKSM" );
+        require(msg.sender == escrow || msg.sender == _buyer, "Only escrow or buyer can call buyKSM" );
         //1. reduce balance
 
         balanceKSM[_buyer] = balanceKSM[_buyer].sub( order.price, "Insuccificient KSMs funds");
@@ -268,18 +260,10 @@ contract MarketPlace is IERC721Receiver, ReentrancyGuard {
     }
  */
 
-    function withdrawAllKSM (address _sender) public  nonReentrant returns (uint lastBalance ){
-        require(isEscrow[msg.sender]  || msg.sender == _sender, "Only escrow or buyer can withdraw all KSM" );
-
+    function withdrawAllKSM (address _sender) public  onlyEscrow nonReentrant returns (uint lastBalance ){
         lastBalance = balanceKSM[_sender];
         balanceKSM[_sender] =0;
         emit WithdrawnAllKSM(_sender, lastBalance);
-    }
-
-    function withdrawKSM (uint _amount, address _sender) onlyEscrow public returns (uint lastBalance ) {
-        lastBalance = balanceKSM[_sender].sub(_amount);
-        emit WithdrawnKSM(_sender, lastBalance);
-        
     }
 
     function withdraw (uint256 _amount, address _currencyCode) public  nonReentrant returns (bool result ){ //onlyOwner

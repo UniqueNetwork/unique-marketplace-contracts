@@ -22,17 +22,17 @@ contract ("MarketPlace for KSM", accounts => {
        assert (accounts[0] == await t721.ownerOf(idNFT), "accounts[0] !=  t721.ownerOf(idNFT)");
        
     }),
-    it ("2. make ask bid", async () => { 
+    it ("2. make ask", async () => { 
 
-        await t721.approve(mpKSM.address, idNFT);
+        await t721.approve(mpKSM.address, idNFT, {from: accounts[0]});
         await  mpKSM.addAsk (  price, //price
             addrKSM, //_currencyCode
 //            0x8d268ccc5844851e91bed6fe63457d1202c20719
               //0x0000000000000000000000000000000000000002
                         t721.address, //_idCollection
-                        idNFT,
-
-        );
+                        idNFT, 
+                        {from: accounts[0]}
+                    );
 
        assert (mpKSM.address == await t721.ownerOf(idNFT), "mpKSM.address !=  t721.ownerOf(idNFT)");
         const askID = await mpKSM.asks(t721.address, idNFT);
@@ -43,25 +43,26 @@ contract ("MarketPlace for KSM", accounts => {
 
         await  mpKSM.depositKSM (  depoSum, //
                          //_currencyCode
-                        accounts[0], //sender
-                         );
-        const balanceKSM = await mpKSM.balanceKSM(accounts[0])
+                        accounts[1], //sender
+                        {from: accounts[0]} );
+        const balanceKSM = await mpKSM.balanceKSM(accounts[1])
    //     console.log ("balanceKSM", balanceKSM.toNumber());
-       assert (depoSum ==  balanceKSM.toNumber(), "depoSum !=  balanceKSM");
+       assert (depoSum ==  balanceKSM.toNumber(), "depoSum !=  balanceKSM", depoSum,   balanceKSM.toNumber());
 
     }),
 
     it ("4. buying", async () => { 
 
       await  mpKSM.buyKSM (t721.address, //_idCollection
-                         idNFT, accounts[0], accounts[0]);
+                         idNFT, accounts[1], accounts[2]);
     
-      const balanceKSM = await mpKSM.balanceKSM(accounts[0])
-       assert (depoSum - price == balanceKSM.toNumber(), "depoSum - price !=  balanceKSM");
+      const balanceKSM = await mpKSM.balanceKSM(accounts[1])
+       assert (depoSum - price == balanceKSM.toNumber(), "depoSum - price !=  balanceKSM", depoSum - price, balanceKSM.toNumber());
       const askID = await mpKSM.asks( t721.address, idNFT);
       const order = await mpKSM.orders(askID);
        assert (order.flagActive.toNumber() == 0, "order.flagActive != 0");
-       assert (accounts[0] == await t721.ownerOf(idNFT), "accounts[0] != t721.ownerOf(idNFT)");
+       const newOwner =  await t721.ownerOf(idNFT);
+       assert (accounts[2] == newOwner, "accounts2 != t721.ownerOf(idNFT)", accounts[2],  newOwner );
 
 
     }) //, 
