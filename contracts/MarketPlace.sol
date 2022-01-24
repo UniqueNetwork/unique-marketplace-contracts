@@ -113,6 +113,8 @@ contract MarketPlace is IERC721Receiver, ReentrancyGuard {
 
     event WithdrawnAllKSM (address _sender, uint256 balance); 
 
+    event WithdrawnKSM (address _sender, uint256 balance); 
+
     event Withdrawn (uint256 _amount, address _currencyCode, address _sender);
     
     function addAsk (uint256 _price, 
@@ -260,10 +262,18 @@ contract MarketPlace is IERC721Receiver, ReentrancyGuard {
     }
  */
 
-    function withdrawAllKSM (address _sender) public  onlyEscrow nonReentrant returns (uint lastBalance ){
+    function withdrawAllKSM (address _sender) public  nonReentrant returns (uint lastBalance ){
+        require(msg.sender == escrow || msg.sender == _sender, "Only escrow or buyer can withdraw all KSM" );
+
         lastBalance = balanceKSM[_sender];
         balanceKSM[_sender] =0;
         emit WithdrawnAllKSM(_sender, lastBalance);
+    }
+
+    function withdrawKSM (uint _amount, address _sender) onlyEscrow public returns (uint lastBalance ) {
+        lastBalance = balanceKSM[_sender].sub(_amount);
+        emit WithdrawnKSM(_sender, lastBalance);
+        
     }
 
     function withdraw (uint256 _amount, address _currencyCode) public  nonReentrant returns (bool result ){ //onlyOwner

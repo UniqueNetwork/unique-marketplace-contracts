@@ -1,7 +1,7 @@
 
 const upgradeFlag= false; // change to true when upgrading
 const MarketPlaceKSM = artifacts.require('MarketPlace.sol');
-const MarketPlaceKSMnew = artifacts.require('MarketPlace_new_test.sol');
+
 const { deployProxy } = require('@openzeppelin/truffle-upgrades');
 const { upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 
@@ -9,6 +9,7 @@ var mp;
 
 module.exports = async function(deployer,_network, addresses) {
   if (upgradeFlag)  {
+      const MarketPlaceKSMnew = artifacts.require('MarketPlace_new.sol');
       const networkId = await web3.eth.net.getId();     
       //await deployer.deploy(MarketPlaceKSM, addresses[0]);
       // const mp = await MarketPlaceKSM.deployed();
