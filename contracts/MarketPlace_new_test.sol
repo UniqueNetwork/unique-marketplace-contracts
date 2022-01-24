@@ -9,7 +9,7 @@ import "./ReentrancyGuard.sol";
 import "./Initializable.sol";
 
 
-contract MarketPlace is IERC721Receiver, ReentrancyGuard {
+contract MarketPlace_new_test is IERC721Receiver, ReentrancyGuard {
     using SafeMath for uint;
     struct Order {
         
@@ -121,7 +121,7 @@ contract MarketPlace is IERC721Receiver, ReentrancyGuard {
                     uint256 _idNFT
                   ) public  { //
         address ownerNFT = IERC721ext(_idCollection).ownerOf(_idNFT);
-        require (ownerNFT == msg.sender, "Only token owner can make ask");
+        require (ownerNFT == msg.sender, "Only token owner can make ask everytime");
         string memory nameNFT;
         string memory symbolNFT;
         string memory uriNFT;

@@ -15,7 +15,7 @@ const addrE = '0x63ea7F78107dF4C6fd8b17e7b05b1b3D41a5B1Ab'
 // '0x4a81cff73f1b8c6d94f50EDC08A4DEe7fbC109C6'
 //"0xa0df350d2637096571F7A701CBc1C5fdE30dF76A"
 //0xcbD1B6C83908C27F324e5cFBb6f62d27ef9e27C4
-// const result = addressToEvm(addr);
+ const result = addressToEvm(addr);
 // console.log(result);
 const resultP = evmToAddress(addrE, 42, 'blake2');
 console.log(resultP)
