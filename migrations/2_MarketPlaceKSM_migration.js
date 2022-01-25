@@ -3,7 +3,7 @@ const owner =  process.env.OWNER;
 const escrow =  process.env.ESCROW;
 const helper = process.env.HELPERS;
 
-const upgradeFlag= true; // change to true when upgrading
+const upgradeFlag= false || process.env.UPGRADE_FLAG; // change to true when upgrading
 
 //const BridgeGate = artifacts.require('BridgeGate.sol');
 const MarketPlaceKSM = artifacts.require('MarketPlace.sol');
@@ -25,13 +25,13 @@ module.exports = async function(deployer,_network, addresses) {
         
         // upgrade branch https://forum.openzeppelin.com/t/openzeppelin-upgrades-step-by-step-tutorial-for-truffle/3579
              // docs: https://docs.openzeppelin.com/upgrades-plugins/1.x/  
-             if (networkId == "8888")  {
+              if (networkId == "8888")  {
               const ch = await  ContractHelper.at(helper);
-
+              console.log ("toggleAllowlist off");    
               tx =  await ch.toggleAllowlist(existing.address, false, {from:owner})
-              console.log ("toggleAllowlist", tx.receipt );  
+              console.log ("toggleAllowlist off done", tx.receipt );  
              }
-
+ 
           mp = await upgradeProxy(existing.address, MarketPlaceKSMnew, { deployer });
           console.log("Upgraded", mp.address);
       

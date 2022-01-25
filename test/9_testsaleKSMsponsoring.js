@@ -11,9 +11,6 @@ const ContractHelper = artifacts.require('interfaces/ContractHelpers.sol')
 
 const Token721 = artifacts.require('ERC721example.sol');
 
-
-
-
 contract ("MarketPlace for KSM", accounts => {
     var mpKSM, t721;
     const idNFT = 1234;
@@ -21,19 +18,13 @@ contract ("MarketPlace for KSM", accounts => {
     const depoSum = 1500;
     const addrKSM = web3.utils.toChecksumAddress("0x0000000000000000000000000000000000000002")
     
-    const owner =  process.env.OWNER;
-    const escrow =  process.env.ESCROW;
-    
-    
-
-
     it ("0. configure market, escrow", async () => { 
         const networkId = await web3.eth.net.getId();  
         const adrs = require('../addresses.json')
         mpKSM = await MarketPlace.at(adrs[networkId].marketplace);
 
         const isEscrow = await mpKSM.setEscrow(escrow, true);
-        assert (isEscrow, "Escrow not changed");
+        assert (isEscrow, "Escrow not changed")
 
         
         if (networkId == "8888") {        

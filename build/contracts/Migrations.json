@@ -2200,12 +2200,12 @@
     "8888": {
       "events": {},
       "links": {},
-      "address": "0x54069d114AB63f66257FDAF2BE285bc59d17e458",
-      "transactionHash": "0xafdf30a3fbdbf4660cc86e3a5332bcd54475d371026f97144c8bcd75c90f99cd"
+      "address": "0xc61e2D734B45b709eE81bD543b4298529e56923F",
+      "transactionHash": "0xfb0a3ddc6eb066168fa68ab066cafadb528b04d33fed51ee4f7e481afbb44f57"
     }
   },
   "schemaVersion": "3.4.4",
-  "updatedAt": "2022-01-25T14:15:18.348Z",
+  "updatedAt": "2022-01-25T15:06:30.906Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",
