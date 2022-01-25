@@ -4,12 +4,10 @@ import "./interfaces/IERC721ext.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./ReentrancyGuard.sol";
-
 import "./Initializable.sol";
 
 
-contract MarketPlace is IERC721Receiver, ReentrancyGuard {
+contract MarketPlace is IERC721Receiver, Initializable {
     using SafeMath for uint;
     struct Order {
         
@@ -38,11 +36,27 @@ contract MarketPlace is IERC721Receiver, ReentrancyGuard {
     address owner;
     address nativecoin;
 
-    constructor (address _owner, address _escrow) {
-    // function initialize(address _owner, address _escrow) public initializer {
+    // from abstract contract ReentrancyGuard 
+    // Booleans are more expensive than uint256 or any type that takes up a full
+    // word because each write operation emits an extra SLOAD to first read the
+    // slot's contents, replace the bits taken up by the boolean, and then write
+    // back. This is the compiler's defense against contract upgrades and
+    // pointer aliasing, and it cannot be disabled.
+
+    // The values being non-zero value makes deployment a bit more expensive,
+    // but in exchange the refund on every call to nonReentrant will be lower in
+    // amount. Since refunds are capped to a percentage of the total
+    // transaction's gas, it is best to keep them low in cases like this one, to
+    // increase the likelihood of the full refund coming into effect.
+    uint8 private constant _NOT_ENTERED = 1;
+    uint8 private constant _ENTERED = 2;
+
+    uint8 private _status;
+
+    //constructor (address _owner, address _escrow) {
+     function initialize() public initializer {
    
-        isEscrow [_escrow] = true;
-        owner = _owner;
+        owner = msg.sender;
 
          orders.push(Order(        
                     0,
@@ -52,25 +66,23 @@ contract MarketPlace is IERC721Receiver, ReentrancyGuard {
                     address(0),
                     address(0),
                     0, "","",""));
+         _status = _NOT_ENTERED;
+
     }
 
-   function setOwner  (address _newEscrow) public onlyOwner {
-        owner = _newEscrow;
-    }
+    modifier nonReentrant() { // from abstract contract ReentrancyGuard 
+        // On the first call to nonReentrant, _notEntered will be true
+        require(_status != _ENTERED, "ReentrancyGuard: reentrant call");
 
-    function setEscrow  (address _escrow, bool _state) public onlyOwner returns (bool) {
-        if (isEscrow[_escrow] != _state)  {
-            isEscrow[_escrow] = _state;
-            return true;
-        }
-        return false;
-    }
+        // Any calls to nonReentrant after this point will fail
+        _status = _ENTERED;
 
-    function setNativeCoin  (address _coin) public onlyOwner {
-        nativecoin = _coin;
-    }
+        _;
 
-    
+        // By storing the original value once again, a refund is triggered (see
+        // https://eips.ethereum.org/EIPS/eip-2200)
+        _status = _NOT_ENTERED;
+    }
 
     modifier onlyEscrow () {
         require(isEscrow [msg.sender] , "Only escrow can");
@@ -123,6 +135,24 @@ contract MarketPlace is IERC721Receiver, ReentrancyGuard {
 
     event Withdrawn (uint256 _amount, address _currencyCode, address _sender);
     
+
+   function setOwner  (address _newOwner) public onlyOwner {
+        owner = _newOwner;
+    }
+
+    function setEscrow  (address _escrow, bool _state) public onlyOwner returns (bool) {
+        if (isEscrow[_escrow] != _state)  {
+            isEscrow[_escrow] = _state;
+            return true;
+        }
+        return false;
+    }
+
+    function setNativeCoin  (address _coin) public onlyOwner {
+        nativecoin = _coin;
+    }
+
+
     function addAsk (uint256 _price, 
                     address  _currencyCode, 
                     address _idCollection, 
