@@ -189,6 +189,540 @@
           }
         }
       }
+    },
+    "f13dead1c05103406e4c43cd39cc5de2a8b83515fd580c29a2df4b8a95eb5bb5": {
+      "address": "0x461DaE69CE6D20bFa4Ea6fe201eA7c4cF2a225C3",
+      "txHash": "0xf0388c76fb126c0b3ab6952deeb125260a91dfa7fe11ded0a396e03e004385d7",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "initialized",
+            "type": "t_bool",
+            "src": "../project:/contracts/Initializable.sol:23"
+          },
+          {
+            "contract": "Initializable",
+            "label": "initializing",
+            "type": "t_bool",
+            "src": "../project:/contracts/Initializable.sol:28"
+          },
+          {
+            "contract": "Initializable",
+            "label": "______gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../project:/contracts/Initializable.sol:63"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "orders",
+            "type": "t_array(t_struct(Order)2671_storage)dyn_storage",
+            "src": "../project:/contracts/MarketPlace.sol:25"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "test",
+            "type": "t_uint256",
+            "src": "../project:/contracts/MarketPlace.sol:26"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "balanceKSM",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "../project:/contracts/MarketPlace.sol:27"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "asks",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "../project:/contracts/MarketPlace.sol:28"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "ordersbyNFT",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))",
+            "src": "../project:/contracts/MarketPlace.sol:29"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "asksbySeller",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "src": "../project:/contracts/MarketPlace.sol:31"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "isEscrow",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "../project:/contracts/MarketPlace.sol:33"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "owner",
+            "type": "t_address",
+            "src": "../project:/contracts/MarketPlace.sol:36"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "nativecoin",
+            "type": "t_address",
+            "src": "../project:/contracts/MarketPlace.sol:37"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "_status",
+            "type": "t_uint8",
+            "src": "../project:/contracts/MarketPlace.sol:54"
+          }
+        ],
+        "types": {
+          "t_array(t_struct(Order)2671_storage)dyn_storage": {
+            "label": "struct MarketPlace.Order[]"
+          },
+          "t_struct(Order)2671_storage": {
+            "label": "struct MarketPlace.Order",
+            "members": [
+              {
+                "label": "idNFT",
+                "type": "t_uint256"
+              },
+              {
+                "label": "currencyCode",
+                "type": "t_address"
+              },
+              {
+                "label": "price",
+                "type": "t_uint256"
+              },
+              {
+                "label": "time",
+                "type": "t_uint256"
+              },
+              {
+                "label": "idCollection",
+                "type": "t_address"
+              },
+              {
+                "label": "ownerAddr",
+                "type": "t_address"
+              },
+              {
+                "label": "flagActive",
+                "type": "t_uint8"
+              },
+              {
+                "label": "name",
+                "type": "t_string_storage"
+              },
+              {
+                "label": "symbol",
+                "type": "t_string_storage"
+              },
+              {
+                "label": "tokenURI",
+                "type": "t_string_storage"
+              }
+            ]
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(address => mapping(uint256 => uint256))"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))": {
+            "label": "mapping(address => mapping(uint256 => uint256[]))"
+          },
+          "t_mapping(t_uint256,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(uint256 => uint256[])"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "1306f5b274819803bba051ca25ae8b1659afd389a745b7e88fc9d05e4c0675f0": {
+      "address": "0xB3Ff9d86807028418CD2fe22BBCb8060dF9F2d12",
+      "txHash": "0xd8e96f186bd954e2925fe9572b3a7fad9ad27f47934cdeabd6074893c8d01c04",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "initialized",
+            "type": "t_bool",
+            "src": "../project:/contracts/Initializable.sol:23"
+          },
+          {
+            "contract": "Initializable",
+            "label": "initializing",
+            "type": "t_bool",
+            "src": "../project:/contracts/Initializable.sol:28"
+          },
+          {
+            "contract": "Initializable",
+            "label": "______gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../project:/contracts/Initializable.sol:63"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "orders",
+            "type": "t_array(t_struct(Order)3696_storage)dyn_storage",
+            "src": "../project:/contracts/MarketPlace_new.sol:25"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "test",
+            "type": "t_uint256",
+            "src": "../project:/contracts/MarketPlace_new.sol:26"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "balanceKSM",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "../project:/contracts/MarketPlace_new.sol:27"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "asks",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "../project:/contracts/MarketPlace_new.sol:28"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "ordersbyNFT",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))",
+            "src": "../project:/contracts/MarketPlace_new.sol:29"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "asksbySeller",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "src": "../project:/contracts/MarketPlace_new.sol:31"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "isEscrow",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "../project:/contracts/MarketPlace_new.sol:33"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "owner",
+            "type": "t_address",
+            "src": "../project:/contracts/MarketPlace_new.sol:36"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "nativecoin",
+            "type": "t_address",
+            "src": "../project:/contracts/MarketPlace_new.sol:37"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "_status",
+            "type": "t_uint8",
+            "src": "../project:/contracts/MarketPlace_new.sol:54"
+          }
+        ],
+        "types": {
+          "t_array(t_struct(Order)3696_storage)dyn_storage": {
+            "label": "struct MarketPlace_new.Order[]"
+          },
+          "t_struct(Order)3696_storage": {
+            "label": "struct MarketPlace_new.Order",
+            "members": [
+              {
+                "label": "idNFT",
+                "type": "t_uint256"
+              },
+              {
+                "label": "currencyCode",
+                "type": "t_address"
+              },
+              {
+                "label": "price",
+                "type": "t_uint256"
+              },
+              {
+                "label": "time",
+                "type": "t_uint256"
+              },
+              {
+                "label": "idCollection",
+                "type": "t_address"
+              },
+              {
+                "label": "ownerAddr",
+                "type": "t_address"
+              },
+              {
+                "label": "flagActive",
+                "type": "t_uint8"
+              },
+              {
+                "label": "name",
+                "type": "t_string_storage"
+              },
+              {
+                "label": "symbol",
+                "type": "t_string_storage"
+              },
+              {
+                "label": "tokenURI",
+                "type": "t_string_storage"
+              }
+            ]
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(address => mapping(uint256 => uint256))"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))": {
+            "label": "mapping(address => mapping(uint256 => uint256[]))"
+          },
+          "t_mapping(t_uint256,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(uint256 => uint256[])"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "330dee413b4f70c3a19131cb012070db3a9c8d0cf6e39a10f182f0496529db1c": {
+      "address": "0x2866469a6CcDeC70c26B0439576C2E6dA54fB18D",
+      "txHash": "0x1de066552faef972bbd748fdba7f1358e69e51e2e5a524485636c7880593847c",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "initialized",
+            "type": "t_bool",
+            "src": "../project:/contracts/Initializable.sol:23"
+          },
+          {
+            "contract": "Initializable",
+            "label": "initializing",
+            "type": "t_bool",
+            "src": "../project:/contracts/Initializable.sol:28"
+          },
+          {
+            "contract": "Initializable",
+            "label": "______gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../project:/contracts/Initializable.sol:63"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "orders",
+            "type": "t_array(t_struct(Order)3696_storage)dyn_storage",
+            "src": "../project:/contracts/MarketPlace_new.sol:25"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "test",
+            "type": "t_uint256",
+            "src": "../project:/contracts/MarketPlace_new.sol:26"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "balanceKSM",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "../project:/contracts/MarketPlace_new.sol:27"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "asks",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "../project:/contracts/MarketPlace_new.sol:28"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "ordersbyNFT",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))",
+            "src": "../project:/contracts/MarketPlace_new.sol:29"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "asksbySeller",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "src": "../project:/contracts/MarketPlace_new.sol:31"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "isEscrow",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "../project:/contracts/MarketPlace_new.sol:33"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "owner",
+            "type": "t_address",
+            "src": "../project:/contracts/MarketPlace_new.sol:36"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "nativecoin",
+            "type": "t_address",
+            "src": "../project:/contracts/MarketPlace_new.sol:37"
+          },
+          {
+            "contract": "MarketPlace_new",
+            "label": "_status",
+            "type": "t_uint8",
+            "src": "../project:/contracts/MarketPlace_new.sol:54"
+          }
+        ],
+        "types": {
+          "t_array(t_struct(Order)3696_storage)dyn_storage": {
+            "label": "struct MarketPlace_new.Order[]"
+          },
+          "t_struct(Order)3696_storage": {
+            "label": "struct MarketPlace_new.Order",
+            "members": [
+              {
+                "label": "idNFT",
+                "type": "t_uint256"
+              },
+              {
+                "label": "currencyCode",
+                "type": "t_address"
+              },
+              {
+                "label": "price",
+                "type": "t_uint256"
+              },
+              {
+                "label": "time",
+                "type": "t_uint256"
+              },
+              {
+                "label": "idCollection",
+                "type": "t_address"
+              },
+              {
+                "label": "ownerAddr",
+                "type": "t_address"
+              },
+              {
+                "label": "flagActive",
+                "type": "t_uint8"
+              },
+              {
+                "label": "name",
+                "type": "t_string_storage"
+              },
+              {
+                "label": "symbol",
+                "type": "t_string_storage"
+              },
+              {
+                "label": "tokenURI",
+                "type": "t_string_storage"
+              }
+            ]
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(address => mapping(uint256 => uint256))"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))": {
+            "label": "mapping(address => mapping(uint256 => uint256[]))"
+          },
+          "t_mapping(t_uint256,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(uint256 => uint256[])"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
     }
   }
 }

@@ -1,6 +1,9 @@
 require('dotenv').config();
+
 const pkOnwer = process.env.APP_OWNER_PRIVATE_KEY;
 const pkEscrow = process.env.APP_ESCROW_PRIVATE_KEY;
+const pktestbuyer = process.env.TEST_BUYER_PRIVATE_KEY;
+const pktestseller = process.env.TEST_SELLER_PRIVATE_KEY;
 const endpoint = "https://rpc-opal.unique.network/" || process.env.ENDPOINT;
 
 /**
@@ -55,7 +58,7 @@ module.exports = {
     upt: { // Unique Public testnet
 
         provider: () => new HDWalletProvider({
-            privateKeys: [pkOnwer,pkEscrow],  
+            privateKeys: [pkOnwer,pkEscrow, pktestbuyer, pktestseller],  
             providerOrUrl: endpoint}),/* http://35.157.131.180:9973/  http://15.236.177.137:9833/*/
             network_id: 8888,
            // gasPrice: '0xEEA39D5A99'

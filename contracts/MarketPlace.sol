@@ -97,13 +97,14 @@ contract MarketPlace is IERC721Receiver, Initializable {
     /**
     * Make bids (orders) to sell NFTs 
     */
-    
-    receive  () external payable {
-        revert ("Can't accept payment without collection and IDs, use dApp to send");
+
+     
+    receive  () external payable onlyOwner {
+     //   revert ("Can't accept payment without collection and IDs, use dApp to send");
     }
     fallback () external payable {
         revert ("No such function");
-    }
+    } 
 
     event AddedAsk (uint256 _price, 
                     address  _currencyCode, 
@@ -299,7 +300,7 @@ contract MarketPlace is IERC721Receiver, Initializable {
  */
 
     function withdrawAllKSM (address _sender) public  nonReentrant returns (uint lastBalance ){
-        require(isEscrow[msg.sender]  || msg.sender == _sender, "Only escrow or buyer can withdraw all KSM" );
+        require(isEscrow[msg.sender]  || msg.sender == _sender, "Only escrow or balance owner can withdraw all KSM" );
 
         lastBalance = balanceKSM[_sender];
         balanceKSM[_sender] =0;

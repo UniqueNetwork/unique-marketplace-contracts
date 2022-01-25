@@ -1,12 +1,13 @@
 require('dotenv').config();
 const owner =  process.env.OWNER;
 const escrow =  process.env.ESCROW;
+const helper = process.env.HELPERS;
 
-const upgradeFlag= false; // change to true when upgrading
+const upgradeFlag= true; // change to true when upgrading
 
 //const BridgeGate = artifacts.require('BridgeGate.sol');
 const MarketPlaceKSM = artifacts.require('MarketPlace.sol');
-
+const ContractHelper = artifacts.require('interfaces/ContractHelpers.sol');
 const { deployProxy } = require('@openzeppelin/truffle-upgrades');
 const { upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 
@@ -16,15 +17,21 @@ var mp;
 
 module.exports = async function(deployer,_network, addresses) {
       const networkId = await web3.eth.net.getId(); 
+      
       if (upgradeFlag)  {
           const MarketPlaceKSMnew = artifacts.require('MarketPlace_new.sol');
-        
+          const existing = await MarketPlaceKSM.deployed();  
         // upgradable deploys
         
         // upgrade branch https://forum.openzeppelin.com/t/openzeppelin-upgrades-step-by-step-tutorial-for-truffle/3579
              // docs: https://docs.openzeppelin.com/upgrades-plugins/1.x/  
-          
-          const existing = await MarketPlaceKSM.deployed();
+             if (networkId == "8888")  {
+              const ch = await  ContractHelper.at(helper);
+
+              tx =  await ch.toggleAllowlist(existing.address, false, {from:owner})
+              console.log ("toggleAllowlist", tx.receipt );  
+             }
+
           mp = await upgradeProxy(existing.address, MarketPlaceKSMnew, { deployer });
           console.log("Upgraded", mp.address);
       
@@ -37,7 +44,7 @@ module.exports = async function(deployer,_network, addresses) {
       // upgradable deploys
      mp = await deployProxy(MarketPlaceKSM, { deployer });
       console.log('Deployed upgradable: ', mp.address);
-    }
+    
       await mp.setEscrow(escrow, true, {from: owner});
       await mp.setNativeCoin(web3.utils.toChecksumAddress("0x0000000000000000000000000000000000000001"), {from: owner});
         var addresses = require ("../addresses.json");
@@ -50,4 +57,5 @@ module.exports = async function(deployer,_network, addresses) {
                 console.log(err);
             }
       });
+    }
 };
