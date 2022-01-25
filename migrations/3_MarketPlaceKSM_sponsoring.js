@@ -36,9 +36,6 @@ module.exports = async function(deployer,_network, addresses) {
       console.log ("set SponsoringRateLimit" ); 
       tx = await ch.setSponsoringRateLimit(mp.address, 1, {from:owner})
       console.log (tx.receipt ); 
-      console.log ("set allowlist true" ); 
-      tx =  await ch.toggleAllowlist(mp.address, true, {from:owner})
-      console.log (tx.receipt );  
       
       
        
