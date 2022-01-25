@@ -15,6 +15,7 @@ contract ("MarketPlace for KSM", accounts => {
     const price = 1000;
     const depoSum = 1500;
     const addrKSM = web3.utils.toChecksumAddress("0x0000000000000000000000000000000000000002")
+    
     const owner = accounts [0] || process.env.OWNER;
     const escrow =  accounts[9] || process.env.ESCROW;
 
