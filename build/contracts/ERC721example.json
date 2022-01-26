@@ -15817,7 +15817,7 @@
         1600
       ],
       "IERC721ext": [
-        5082
+        5089
       ],
       "Strings": [
         2147
@@ -15856,7 +15856,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 2562,
-        "sourceUnit": 5083,
+        "sourceUnit": 5090,
         "src": "85:37:13",
         "symbolAliases": [],
         "unitAlias": ""
@@ -15881,7 +15881,7 @@
               "id": 2502,
               "name": "IERC721ext",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 5082,
+              "referencedDeclaration": 5089,
               "src": "158:10:13"
             },
             "id": 2503,
@@ -15895,7 +15895,7 @@
         "id": 2561,
         "linearizedBaseContracts": [
           2561,
-          5082,
+          5089,
           1466,
           1627,
           1582,
@@ -16187,7 +16187,7 @@
           },
           {
             "baseFunctions": [
-              5076
+              5083
             ],
             "body": {
               "id": 2541,
@@ -16355,7 +16355,7 @@
           },
           {
             "baseFunctions": [
-              5069
+              5076
             ],
             "body": {
               "id": 2552,
@@ -16479,7 +16479,7 @@
           },
           {
             "baseFunctions": [
-              5081
+              5088
             ],
             "body": {
               "id": 2559,
@@ -16586,7 +16586,7 @@
         1600
       ],
       "IERC721ext": [
-        5082
+        5089
       ],
       "Strings": [
         2147
@@ -16625,7 +16625,7 @@
         "nameLocation": "-1:-1:-1",
         "nodeType": "ImportDirective",
         "scope": 2562,
-        "sourceUnit": 5083,
+        "sourceUnit": 5090,
         "src": "85:37:13",
         "symbolAliases": [],
         "unitAlias": ""
@@ -16650,7 +16650,7 @@
               "id": 2502,
               "name": "IERC721ext",
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 5082,
+              "referencedDeclaration": 5089,
               "src": "158:10:13"
             },
             "id": 2503,
@@ -16664,7 +16664,7 @@
         "id": 2561,
         "linearizedBaseContracts": [
           2561,
-          5082,
+          5089,
           1466,
           1627,
           1582,
@@ -16956,7 +16956,7 @@
           },
           {
             "baseFunctions": [
-              5076
+              5083
             ],
             "body": {
               "id": 2541,
@@ -17124,7 +17124,7 @@
           },
           {
             "baseFunctions": [
-              5069
+              5076
             ],
             "body": {
               "id": 2552,
@@ -17248,7 +17248,7 @@
           },
           {
             "baseFunctions": [
-              5081
+              5088
             ],
             "body": {
               "id": 2559,
@@ -17330,7 +17330,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.4",
-  "updatedAt": "2022-01-26T09:07:11.409Z",
+  "updatedAt": "2022-01-26T13:24:50.896Z",
   "devdoc": {
     "kind": "dev",
     "methods": {
