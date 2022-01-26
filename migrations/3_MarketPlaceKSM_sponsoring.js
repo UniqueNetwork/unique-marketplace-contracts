@@ -12,9 +12,10 @@ var mp;
 module.exports = async function(deployer,_network, addresses) {
   const networkId = await web3.eth.net.getId(); 
   console.log ('Set sponcoring' ); 
+  const mp = await MarketPlaceKSM.deployed();
   if (networkId == "8888")  {
 
-       const mp = await MarketPlaceKSM.deployed();
+       
        const ch = await  ContractHelper.at(helper);
       //  console.log ('toggleAllowlist',  await ch.toggleAllowlist(mp.address, false, {from:owner}));
       var tx;
@@ -69,7 +70,16 @@ module.exports = async function(deployer,_network, addresses) {
             }
       }); */
   } else {
-    console.log ("Wrong chainID. This sponcoring model  works only for Opal chain")
+    var balance = await web3.eth.getBalance( mp.address); //Will give value in.
+
+    console.log ("balance MP before",  web3.utils.fromWei(balance)   ); 
+     console.log ("send funds", amountToSend ); 
+    const amountToSendW =  web3.utils.toWei (amountToSend)
+    tx = await web3.eth.sendTransaction({ from: owner, to: mp.address, value: amountToSendW }) 
+     balance = await  web3.eth.getBalance( mp.address); //Will give value in.
+    
+    console.log ("balance MP after", web3.utils.fromWei(balance)  ); 
+   // console.log ("Wrong chainID. This sponcoring model  works only for Opal chain")
   }
 
 };

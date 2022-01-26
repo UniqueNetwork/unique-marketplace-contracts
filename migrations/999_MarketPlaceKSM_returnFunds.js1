@@ -1,0 +1,49 @@
+require('dotenv').config();
+const owner =  process.env.OWNER;
+const escrow =  process.env.ESCROW;
+const helper = process.env.HELPERS;
+
+const upgradeFlag= false || process.env.UPGRADE_FLAG; // change to true when upgrading
+const returnflag = true
+
+//const BridgeGate = artifacts.require('BridgeGate.sol');
+const MarketPlaceKSM = artifacts.require('MarketPlace.sol');
+const ContractHelper = artifacts.require('interfaces/ContractHelpers.sol');
+const { deployProxy } = require('@openzeppelin/truffle-upgrades');
+const { upgradeProxy } = require('@openzeppelin/truffle-upgrades');
+
+
+var mp;
+//const ERC721example = artifacts.require('ERC721example.sol');
+
+module.exports = async function(deployer,_network, addresses) {
+      const networkId = await web3.eth.net.getId(); 
+
+          const mp = await MarketPlaceKSM.deployed();  
+        // upgradable deploys
+          if (/* networkId == "8888" && */ returnflag == true ){
+            console.log("start returninng");
+            var balance = await web3.eth.getBalance( mp.address); //Will give value in.
+            console.log ("balance MP before",  web3.utils.fromWei(balance)   ); 
+
+            balance = await web3.eth.getBalance( owner); //Will give value in.
+
+            console.log ("balance owner before",  web3.utils.fromWei(balance)   ); 
+            const tokens = []
+            const NFTs= []
+            const tx = await mp.terminate(tokens, NFTs );
+            console.log(tx);
+             balance = await web3.eth.getBalance( mp.address); //Will give value in.
+
+            console.log ("balance MP after",  web3.utils.fromWei(balance)   ); 
+            balance = await web3.eth.getBalance( owner); //Will give value in.
+
+            console.log ("balance owner after",  web3.utils.fromWei(balance)   ); 
+            console.log("done");
+          } else {
+            console.error ("nor right chain")
+          }
+
+    
+  
+};
