@@ -4,12 +4,10 @@ import "./interfaces/IERC721ext.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./ReentrancyGuard.sol";
-
 import "./Initializable.sol";
 
 
-contract MarketPlace_new_test is IERC721Receiver, ReentrancyGuard {
+contract MarketPlace_new is IERC721Receiver, Initializable {
     using SafeMath for uint;
     struct Order {
         
@@ -32,15 +30,37 @@ contract MarketPlace_new_test is IERC721Receiver, ReentrancyGuard {
 
     mapping (address => uint[]) public asksbySeller; // [addressSeller] =>idorder
 
-    address escrow;
+    mapping (address =>bool) internal isEscrow;
+
+    //address escrow;
     address owner;
     address nativecoin;
 
-    //constructor (address _escrow) {
-     function initialize(address _owner, address _escrow) public initializer {
+    // from abstract contract ReentrancyGuard 
+    // Booleans are more expensive than uint256 or any type that takes up a full
+    // word because each write operation emits an extra SLOAD to first read the
+    // slot's contents, replace the bits taken up by the boolean, and then write
+    // back. This is the compiler's defense against contract upgrades and
+    // pointer aliasing, and it cannot be disabled.
+
+    // The values being non-zero value makes deployment a bit more expensive,
+    // but in exchange the refund on every call to nonReentrant will be lower in
+    // amount. Since refunds are capped to a percentage of the total
+    // transaction's gas, it is best to keep them low in cases like this one, to
+    // increase the likelihood of the full refund coming into effect.
+    uint8 private constant _NOT_ENTERED = 1;
+    uint8 private constant _ENTERED = 2;
+
+    uint8 private _status;
+
+    struct NFT {
+        address  collection;
+        uint256 id;
+    }
+    //constructor (address _owner, address _escrow) {
+     function initialize() public initializer {
    
-        escrow = _escrow;
-        owner = _owner;
+        owner = msg.sender;
 
          orders.push(Order(        
                     0,
@@ -50,24 +70,26 @@ contract MarketPlace_new_test is IERC721Receiver, ReentrancyGuard {
                     address(0),
                     address(0),
                     0, "","",""));
+         _status = _NOT_ENTERED;
+
     }
 
-   function setOwner  (address _newEscrow) public onlyOwner {
-        owner = _newEscrow;
-    }
+    modifier nonReentrant() { // from abstract contract ReentrancyGuard 
+        // On the first call to nonReentrant, _notEntered will be true
+        require(_status != _ENTERED, "ReentrancyGuard: reentrant call");
 
-    function setEscrow  (address _newEscrow) public onlyOwner {
-        escrow = _newEscrow;
-    }
+        // Any calls to nonReentrant after this point will fail
+        _status = _ENTERED;
 
-    function setNativeCoin  (address _coin) public onlyOwner {
-        nativecoin = _coin;
-    }
+        _;
 
-    
+        // By storing the original value once again, a refund is triggered (see
+        // https://eips.ethereum.org/EIPS/eip-2200)
+        _status = _NOT_ENTERED;
+    }
 
     modifier onlyEscrow () {
-        require(msg.sender == escrow, "Only escrow can");
+        require(isEscrow [msg.sender] , "Only escrow can");
         _;
     }
 
@@ -79,13 +101,14 @@ contract MarketPlace_new_test is IERC721Receiver, ReentrancyGuard {
     /**
     * Make bids (orders) to sell NFTs 
     */
-    
-    receive  () external payable {
-        revert ("Can't accept payment without collection and IDs, use dApp to send");
+
+     
+    receive  () external payable onlyOwner {
+     //   revert ("Can't accept payment without collection and IDs, use dApp to send");
     }
     fallback () external payable {
         revert ("No such function");
-    }
+    } 
 
     event AddedAsk (uint256 _price, 
                     address  _currencyCode, 
@@ -113,15 +136,35 @@ contract MarketPlace_new_test is IERC721Receiver, ReentrancyGuard {
 
     event WithdrawnAllKSM (address _sender, uint256 balance); 
 
+    event WithdrawnKSM (address _sender, uint256 balance); 
+
     event Withdrawn (uint256 _amount, address _currencyCode, address _sender);
     
+
+   function setOwner  (address _newOwner) public onlyOwner {
+        owner = _newOwner;
+    }
+
+    function setEscrow  (address _escrow, bool _state) public onlyOwner returns (bool) {
+        if (isEscrow[_escrow] != _state)  {
+            isEscrow[_escrow] = _state;
+            return true;
+        }
+        return false;
+    }
+
+    function setNativeCoin  (address _coin) public onlyOwner {
+        nativecoin = _coin;
+    }
+
+
     function addAsk (uint256 _price, 
                     address  _currencyCode, 
                     address _idCollection, 
                     uint256 _idNFT
                   ) public  { //
         address ownerNFT = IERC721ext(_idCollection).ownerOf(_idNFT);
-        require (ownerNFT == msg.sender, "Only token owner can make ask everytime");
+        require (ownerNFT == msg.sender, "Only token owner can make ask");
         string memory nameNFT;
         string memory symbolNFT;
         string memory uriNFT;
@@ -214,7 +257,7 @@ contract MarketPlace_new_test is IERC721Receiver, ReentrancyGuard {
     function buyKSM (address _idCollection, uint256 _idNFT, address _buyer, address _receiver ) public {
         
         Order memory order = orders[ asks[_idCollection][_idNFT]];
-        require(msg.sender == escrow || msg.sender == _buyer, "Only escrow or buyer can call buyKSM" );
+        require(isEscrow[msg.sender]  || msg.sender == _buyer, "Only escrow or buyer can call buyKSM" );
         //1. reduce balance
 
         balanceKSM[_buyer] = balanceKSM[_buyer].sub( order.price, "Insuccificient KSMs funds");
@@ -260,10 +303,18 @@ contract MarketPlace_new_test is IERC721Receiver, ReentrancyGuard {
     }
  */
 
-    function withdrawAllKSM (address _sender) public  onlyEscrow nonReentrant returns (uint lastBalance ){
+    function withdrawAllKSM (address _sender) public  nonReentrant returns (uint lastBalance ){
+        require(isEscrow[msg.sender]  || msg.sender == _sender, "Only escrow or balance owner can withdraw all KSM" );
+
         lastBalance = balanceKSM[_sender];
         balanceKSM[_sender] =0;
         emit WithdrawnAllKSM(_sender, lastBalance);
+    }
+
+    function withdrawKSM (uint _amount, address _sender) onlyEscrow public returns (uint lastBalance ) {
+        lastBalance = balanceKSM[_sender].sub(_amount);
+        emit WithdrawnKSM(_sender, lastBalance);
+        
     }
 
     function withdraw (uint256 _amount, address _currencyCode) public  nonReentrant returns (bool result ){ //onlyOwner
@@ -295,4 +346,24 @@ contract MarketPlace_new_test is IERC721Receiver, ReentrancyGuard {
     function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data)  public override pure returns(bytes4) {
             return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
         }
+     
+    //TODO make destructing function to return all 
+    function terminate(address[] calldata tokens, NFT[] calldata nfts) public onlyOwner {
+    // Transfer tokens to owner (TODO: error handling)
+        for (uint i = 0; i < tokens.length; i++) {
+            address addr = tokens[i];
+            IERC20 token = IERC20(addr);
+            uint256 balance = token.balanceOf(address(this));
+            token.transfer(owner, balance);
+        }
+        for (uint i = 0; i < nfts.length; i++) {
+            address addr = nfts[i].collection;
+            IERC721ext token = IERC721ext(addr);
+            token.transferFrom(address(this), owner, nfts[i].id);
+            
+    // Transfer Eth to owner and terminate contract
+        payable(owner).transfer(address(this).balance);
+        }
+    } 
+    
 }
