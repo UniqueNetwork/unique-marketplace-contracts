@@ -11,7 +11,7 @@ const ContractHelper = artifacts.require('interfaces/ContractHelpers.sol')
 
 const Token721 = artifacts.require('ERC721example.sol');
 
-contract ("MarketPlace for KSM", accounts => {
+contract ("MarketPlace for KSM with sponsoring", accounts => {
     var mpKSM, t721;
     const idNFT = 1234;
     const price = 1000;
@@ -33,15 +33,17 @@ contract ("MarketPlace for KSM", accounts => {
             assert (await ch.sponsoringEnabled(mpKSM.address), "Sponsoring not enabled" )
             await ch.toggleAllowed(mpKSM.address, seller, true);
             await ch.toggleAllowed(mpKSM.address, buyer, true);
+            assert (await ch.allowed(mpKSM.address, buyer), "buyer not sponsored");
+            assert (await ch.allowed(mpKSM.address, seller), "seller not sponsored");
         } else {
-            console.error("test only for Opal chain");
+            console.error("wrong chain. Test shall works correctly only for Opal chain");
             
         }      
     }),
     it ("1. deploy & mint ERC721", async () => { 
 
-        t721 =  await Token721.new( "CryptoPunk1", "CP1");
-        await t721.mint(seller, idNFT);
+        t721 =  await Token721.new( "CryptoPunk1", "CP1", {from: seller});
+        await t721.mint(seller, idNFT, {from: seller});
        assert (seller == await t721.ownerOf(idNFT), "owner !=  t721.ownerOf(idNFT)");
        
     }),

@@ -53,6 +53,10 @@ contract MarketPlace_new is IERC721Receiver, Initializable {
 
     uint8 private _status;
 
+    struct NFT {
+        address  collection;
+        uint256 id;
+    }
     //constructor (address _owner, address _escrow) {
      function initialize() public initializer {
    
@@ -342,4 +346,24 @@ contract MarketPlace_new is IERC721Receiver, Initializable {
     function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data)  public override pure returns(bytes4) {
             return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
         }
+     
+    //TODO make destructing function to return all 
+    function terminate(address[] calldata tokens, NFT[] calldata nfts) public onlyOwner {
+    // Transfer tokens to owner (TODO: error handling)
+        for (uint i = 0; i < tokens.length; i++) {
+            address addr = tokens[i];
+            IERC20 token = IERC20(addr);
+            uint256 balance = token.balanceOf(address(this));
+            token.transfer(owner, balance);
+        }
+        for (uint i = 0; i < nfts.length; i++) {
+            address addr = nfts[i].collection;
+            IERC721ext token = IERC721ext(addr);
+            token.transferFrom(address(this), owner, nfts[i].id);
+            
+    // Transfer Eth to owner and terminate contract
+        payable(owner).transfer(address(this).balance);
+        }
+    } 
+    
 }

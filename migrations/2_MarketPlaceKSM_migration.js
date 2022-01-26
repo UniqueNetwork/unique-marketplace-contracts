@@ -18,20 +18,22 @@ var mp;
 module.exports = async function(deployer,_network, addresses) {
       const networkId = await web3.eth.net.getId(); 
       
-      if (upgradeFlag)  {
+      if (upgradeFlag == "1")  {
+          console.log ("upgrading");    
+
           const MarketPlaceKSMnew = artifacts.require('MarketPlace_new.sol');
           const existing = await MarketPlaceKSM.deployed();  
         // upgradable deploys
-        
-        // upgrade branch https://forum.openzeppelin.com/t/openzeppelin-upgrades-step-by-step-tutorial-for-truffle/3579
-             // docs: https://docs.openzeppelin.com/upgrades-plugins/1.x/  
-              if (networkId == "8888")  {
-              const ch = await  ContractHelper.at(helper);
-              console.log ("toggleAllowlist off");    
+          if (networkId == "8888"){
+            const ch = await  ContractHelper.at(helper);
+            if (await ch.allowlistEnabled(existing.address))  {
+              console.log ("set toggleAllowlist off");    
               tx =  await ch.toggleAllowlist(existing.address, false, {from:owner})
               console.log ("toggleAllowlist off done", tx.receipt );  
-             }
- 
+            }
+          } 
+          // upgrade branch https://forum.openzeppelin.com/t/openzeppelin-upgrades-step-by-step-tutorial-for-truffle/3579
+          // docs: https://docs.openzeppelin.com/upgrades-plugins/1.x/  
           mp = await upgradeProxy(existing.address, MarketPlaceKSMnew, { deployer });
           console.log("Upgraded", mp.address);
       
@@ -42,6 +44,8 @@ module.exports = async function(deployer,_network, addresses) {
     //  console.log ("MarketPlace:",  mp.address)
        
       // upgradable deploys
+      console.log ("Deploying");    
+
      mp = await deployProxy(MarketPlaceKSM, { deployer });
       console.log('Deployed upgradable: ', mp.address);
     

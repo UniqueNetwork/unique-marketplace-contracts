@@ -6,11 +6,6 @@
   },
   "proxies": [
     {
-      "address": "0xb9e750aE9fD8B2f47e3523941C26669E4F67f84E",
-      "txHash": "0x9e6afde7c9c2a8cd8408f6074e712fed7decee213ce09b006697b6ccb8e4b7cc",
-      "kind": "transparent"
-    },
-    {
       "address": "0xEcA3eDfD09435C2C7D2583124ca9a44f82aF1e8b",
       "txHash": "0x26b332851e2690583e1b3023b4d2aa2a96021621da30944b4f135e82300dcf0c",
       "kind": "transparent"
@@ -29,187 +24,14 @@
       "address": "0xA09929336eC1d895EB123a0410b5931d4F856138",
       "txHash": "0x3a3752259138a63c352e08e6629c69bdf9c92d77629491fc52872ebbefddee2f",
       "kind": "transparent"
+    },
+    {
+      "address": "0xb9e750aE9fD8B2f47e3523941C26669E4F67f84E",
+      "txHash": "0xfee31f1db6dc53213fdd4421d9ae76b63b140d58e5d29a89acf9e7b0840100b8",
+      "kind": "transparent"
     }
   ],
   "impls": {
-    "5068a40dc43818e9c4a9c73890547f9059a62dbd5516e537e71895af9c44dbfa": {
-      "address": "0x4a81cff73f1b8c6d94f50EDC08A4DEe7fbC109C6",
-      "txHash": "0x9be644ee302c6e7a12d68c08522e091f2978f76de1fb611c8087652135567c62",
-      "layout": {
-        "storage": [
-          {
-            "contract": "Initializable",
-            "label": "initialized",
-            "type": "t_bool",
-            "src": "../project:/contracts/Initializable.sol:23"
-          },
-          {
-            "contract": "Initializable",
-            "label": "initializing",
-            "type": "t_bool",
-            "src": "../project:/contracts/Initializable.sol:28"
-          },
-          {
-            "contract": "Initializable",
-            "label": "______gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "../project:/contracts/Initializable.sol:63"
-          },
-          {
-            "contract": "ReentrancyGuard",
-            "label": "_status",
-            "type": "t_uint256",
-            "src": "../project:/contracts/ReentrancyGuard.sol:39"
-          },
-          {
-            "contract": "MarketPlace",
-            "label": "orders",
-            "type": "t_array(t_struct(Order)2672_storage)dyn_storage",
-            "src": "../project:/contracts/MarketPlace.sol:27"
-          },
-          {
-            "contract": "MarketPlace",
-            "label": "test",
-            "type": "t_uint256",
-            "src": "../project:/contracts/MarketPlace.sol:28"
-          },
-          {
-            "contract": "MarketPlace",
-            "label": "balanceKSM",
-            "type": "t_mapping(t_address,t_uint256)",
-            "src": "../project:/contracts/MarketPlace.sol:29"
-          },
-          {
-            "contract": "MarketPlace",
-            "label": "asks",
-            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
-            "src": "../project:/contracts/MarketPlace.sol:30"
-          },
-          {
-            "contract": "MarketPlace",
-            "label": "ordersbyNFT",
-            "type": "t_mapping(t_address,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))",
-            "src": "../project:/contracts/MarketPlace.sol:31"
-          },
-          {
-            "contract": "MarketPlace",
-            "label": "asksbySeller",
-            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
-            "src": "../project:/contracts/MarketPlace.sol:33"
-          },
-          {
-            "contract": "MarketPlace",
-            "label": "isEscrow",
-            "type": "t_mapping(t_address,t_bool)",
-            "src": "../project:/contracts/MarketPlace.sol:35"
-          },
-          {
-            "contract": "MarketPlace",
-            "label": "owner",
-            "type": "t_address",
-            "src": "../project:/contracts/MarketPlace.sol:38"
-          },
-          {
-            "contract": "MarketPlace",
-            "label": "nativecoin",
-            "type": "t_address",
-            "src": "../project:/contracts/MarketPlace.sol:39"
-          }
-        ],
-        "types": {
-          "t_array(t_struct(Order)2672_storage)dyn_storage": {
-            "label": "struct MarketPlace.Order[]"
-          },
-          "t_struct(Order)2672_storage": {
-            "label": "struct MarketPlace.Order",
-            "members": [
-              {
-                "label": "idNFT",
-                "type": "t_uint256"
-              },
-              {
-                "label": "currencyCode",
-                "type": "t_address"
-              },
-              {
-                "label": "price",
-                "type": "t_uint256"
-              },
-              {
-                "label": "time",
-                "type": "t_uint256"
-              },
-              {
-                "label": "idCollection",
-                "type": "t_address"
-              },
-              {
-                "label": "ownerAddr",
-                "type": "t_address"
-              },
-              {
-                "label": "flagActive",
-                "type": "t_uint8"
-              },
-              {
-                "label": "name",
-                "type": "t_string_storage"
-              },
-              {
-                "label": "symbol",
-                "type": "t_string_storage"
-              },
-              {
-                "label": "tokenURI",
-                "type": "t_string_storage"
-              }
-            ]
-          },
-          "t_uint256": {
-            "label": "uint256"
-          },
-          "t_address": {
-            "label": "address"
-          },
-          "t_uint8": {
-            "label": "uint8"
-          },
-          "t_string_storage": {
-            "label": "string"
-          },
-          "t_mapping(t_address,t_uint256)": {
-            "label": "mapping(address => uint256)"
-          },
-          "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
-            "label": "mapping(address => mapping(uint256 => uint256))"
-          },
-          "t_mapping(t_uint256,t_uint256)": {
-            "label": "mapping(uint256 => uint256)"
-          },
-          "t_mapping(t_address,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))": {
-            "label": "mapping(address => mapping(uint256 => uint256[]))"
-          },
-          "t_mapping(t_uint256,t_array(t_uint256)dyn_storage)": {
-            "label": "mapping(uint256 => uint256[])"
-          },
-          "t_array(t_uint256)dyn_storage": {
-            "label": "uint256[]"
-          },
-          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
-            "label": "mapping(address => uint256[])"
-          },
-          "t_mapping(t_address,t_bool)": {
-            "label": "mapping(address => bool)"
-          },
-          "t_bool": {
-            "label": "bool"
-          },
-          "t_array(t_uint256)50_storage": {
-            "label": "uint256[50]"
-          }
-        }
-      }
-    },
     "e0ea68a508a3a5039b33b0e05444e781ee4cdb5842d1b0147458cf8a30ad5066": {
       "address": "0x0Bb909b7c3817F8fB7188e8fbaA2763028956E30",
       "txHash": "0x054d1274e917c26c25e5e22c5680b3335143ff0ea2071f86e75195fada227df7",
@@ -567,8 +389,186 @@
       }
     },
     "330dee413b4f70c3a19131cb012070db3a9c8d0cf6e39a10f182f0496529db1c": {
-      "address": "0x74Fe3CA11746DA7c16A20D50cb60F93A6720d095",
-      "txHash": "0x423f39d34ad84cb82c2ab60cafa32bdc254b74d468f661d08fafaeb36a1f1f95",
+      "address": "0x4a81cff73f1b8c6d94f50EDC08A4DEe7fbC109C6",
+      "txHash": "0x0f2678a1fc4073f080161db2568825101b53aa91b73eaa52dc62dcaa9cddd1a7",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "initialized",
+            "type": "t_bool",
+            "src": "../project:/contracts/Initializable.sol:23"
+          },
+          {
+            "contract": "Initializable",
+            "label": "initializing",
+            "type": "t_bool",
+            "src": "../project:/contracts/Initializable.sol:28"
+          },
+          {
+            "contract": "Initializable",
+            "label": "______gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../project:/contracts/Initializable.sol:63"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "orders",
+            "type": "t_array(t_struct(Order)2671_storage)dyn_storage",
+            "src": "../project:/contracts/MarketPlace.sol:25"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "test",
+            "type": "t_uint256",
+            "src": "../project:/contracts/MarketPlace.sol:26"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "balanceKSM",
+            "type": "t_mapping(t_address,t_uint256)",
+            "src": "../project:/contracts/MarketPlace.sol:27"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "asks",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_uint256))",
+            "src": "../project:/contracts/MarketPlace.sol:28"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "ordersbyNFT",
+            "type": "t_mapping(t_address,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))",
+            "src": "../project:/contracts/MarketPlace.sol:29"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "asksbySeller",
+            "type": "t_mapping(t_address,t_array(t_uint256)dyn_storage)",
+            "src": "../project:/contracts/MarketPlace.sol:31"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "isEscrow",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "../project:/contracts/MarketPlace.sol:33"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "owner",
+            "type": "t_address",
+            "src": "../project:/contracts/MarketPlace.sol:36"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "nativecoin",
+            "type": "t_address",
+            "src": "../project:/contracts/MarketPlace.sol:37"
+          },
+          {
+            "contract": "MarketPlace",
+            "label": "_status",
+            "type": "t_uint8",
+            "src": "../project:/contracts/MarketPlace.sol:54"
+          }
+        ],
+        "types": {
+          "t_array(t_struct(Order)2671_storage)dyn_storage": {
+            "label": "struct MarketPlace.Order[]"
+          },
+          "t_struct(Order)2671_storage": {
+            "label": "struct MarketPlace.Order",
+            "members": [
+              {
+                "label": "idNFT",
+                "type": "t_uint256"
+              },
+              {
+                "label": "currencyCode",
+                "type": "t_address"
+              },
+              {
+                "label": "price",
+                "type": "t_uint256"
+              },
+              {
+                "label": "time",
+                "type": "t_uint256"
+              },
+              {
+                "label": "idCollection",
+                "type": "t_address"
+              },
+              {
+                "label": "ownerAddr",
+                "type": "t_address"
+              },
+              {
+                "label": "flagActive",
+                "type": "t_uint8"
+              },
+              {
+                "label": "name",
+                "type": "t_string_storage"
+              },
+              {
+                "label": "symbol",
+                "type": "t_string_storage"
+              },
+              {
+                "label": "tokenURI",
+                "type": "t_string_storage"
+              }
+            ]
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_uint256))": {
+            "label": "mapping(address => mapping(uint256 => uint256))"
+          },
+          "t_mapping(t_uint256,t_uint256)": {
+            "label": "mapping(uint256 => uint256)"
+          },
+          "t_mapping(t_address,t_mapping(t_uint256,t_array(t_uint256)dyn_storage))": {
+            "label": "mapping(address => mapping(uint256 => uint256[]))"
+          },
+          "t_mapping(t_uint256,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(uint256 => uint256[])"
+          },
+          "t_array(t_uint256)dyn_storage": {
+            "label": "uint256[]"
+          },
+          "t_mapping(t_address,t_array(t_uint256)dyn_storage)": {
+            "label": "mapping(address => uint256[])"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "9f14bcdc9f635c50aedf21ecc567c89cb807d02bfe88c015934c5652b5cc7540": {
+      "address": "0x91642Ba015065822fc4e530C222f2492B5B97425",
+      "txHash": "0x5d7224705d7a97684f7a84eb6cf3721c1a27183219cff4d3ffe57f282d5458d6",
       "layout": {
         "storage": [
           {
@@ -592,7 +592,7 @@
           {
             "contract": "MarketPlace_new",
             "label": "orders",
-            "type": "t_array(t_struct(Order)3696_storage)dyn_storage",
+            "type": "t_array(t_struct(Order)3692_storage)dyn_storage",
             "src": "../project:/contracts/MarketPlace_new.sol:25"
           },
           {
@@ -651,10 +651,10 @@
           }
         ],
         "types": {
-          "t_array(t_struct(Order)3696_storage)dyn_storage": {
+          "t_array(t_struct(Order)3692_storage)dyn_storage": {
             "label": "struct MarketPlace_new.Order[]"
           },
-          "t_struct(Order)3696_storage": {
+          "t_struct(Order)3692_storage": {
             "label": "struct MarketPlace_new.Order",
             "members": [
               {
