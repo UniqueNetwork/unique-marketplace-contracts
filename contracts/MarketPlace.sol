@@ -4,10 +4,10 @@ import "./interfaces/IERC721ext.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./Initializable.sol";
+//import "./Initializable.sol";
 
 
-contract MarketPlace is IERC721Receiver, Initializable {
+contract MarketPlace is IERC721Receiver/* , Initializable */ {
     using SafeMath for uint;
     struct Order {
         
@@ -57,9 +57,9 @@ contract MarketPlace is IERC721Receiver, Initializable {
         address  collection;
         uint256 id;
     }
-    //constructor (address _owner, address _escrow) {
-     function initialize() public initializer {
-   
+    
+     //function initialize() public initializer {
+   constructor () { // call setEscrow directly
         owner = msg.sender;
 
          orders.push(Order(        

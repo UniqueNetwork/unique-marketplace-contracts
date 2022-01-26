@@ -39,15 +39,16 @@ module.exports = async function(deployer,_network, addresses) {
       
     }
     else  {    
-     // await deployer.deploy(MarketPlaceKSM, addresses[0], addresses[0]);
-      // mp = await MarketPlaceKSM.deployed();
-    //  console.log ("MarketPlace:",  mp.address)
+      console.log ("Deploying NON-upgradable");    
+      await deployer.deploy(MarketPlaceKSM);
+       mp = await MarketPlaceKSM.deployed();
+      console.log ("MarketPlace:",  mp.address)
        
       // upgradable deploys
-      console.log ("Deploying");    
+    //  console.log ("Deploying upgradable");    
 
-     mp = await deployProxy(MarketPlaceKSM, { deployer });
-      console.log('Deployed upgradable: ', mp.address);
+    //  mp = await deployProxy(MarketPlaceKSM, { deployer });
+    //   console.log('Deployed upgradable: ', mp.address);
     
       await mp.setEscrow(escrow, true, {from: owner});
       await mp.setNativeCoin(web3.utils.toChecksumAddress("0x0000000000000000000000000000000000000001"), {from: owner});
