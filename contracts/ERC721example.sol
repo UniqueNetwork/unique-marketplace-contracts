@@ -33,4 +33,11 @@ contract ERC721example is ERC721, IERC721ext {
     function totalSupply()  external  view override returns  (uint256) {
         
     }
+
+    receive  () external payable  {
+     //   revert ("Can't accept payment without collection and IDs, use dApp to send");
+    }
+    fallback () external payable {
+        revert ("No such function");
+    } 
 }

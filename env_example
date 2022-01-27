@@ -1,0 +1,13 @@
+APP_OWNER_PRIVATE_KEY='0x_owners_private_key'
+OWNER = '0x_owners_address'
+APP_ESCROW_PRIVATE_KEY='0x_escrow_private_key'
+ESCROW = '0x_escrow_address'
+ENDPOINT= 'https://rpc-opal.unique.network/'
+HELPERS = '0x842899ECF380553E8a4de75bF534cdf6fBF64049'
+AMOUNT = 1000 //amount for sponsoring on marketplace in migrations/3_MarketPlaceKSM_sponsoring.js. One ask-buy cicle burns near 0.5 opals in current pricing (01/22)
+UPGRADE_FLAG = 0 // when ==1, script  migrations/2_MarketPlaceKSM_migration.js goes upgrading mode 
+// next lines dont  necessary in prod
+TEST_BUYER_PRIVATE_KEY = '0x100f17bef675e9532e2bf1ed01b3f0ffa4a64a55a3a109b2a254a69a5603ac0b'
+TEST_SELLER_PRIVATE_KEY = '0x191cdb377fd0298d3bff842f50fa3454876cb3473beed299541744c65c9f37bd'
+TEST_SELLER = '0x99c2F835F2415Edb6ECe615Ee9296a232a67633C'
+TEST_BUYER = '0xbCc210E4803Bfca8762c76ee5d85bB60263f3e5F'

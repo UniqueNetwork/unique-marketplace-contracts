@@ -1,3 +1,11 @@
+/** 
+ *  @title  migrate utility to return funds from terminating marketplace smartcontract 
+ * 
+ * @dev normally disconnected from migration, to switch on - rename file from .js1 to .js and call 
+ * truffle migrate --f 999  --network upt  (or needs chain name)
+ * don't forget to rename to .js1 for disconnecting from usual migration
+ */
+
 require('dotenv').config();
 const owner =  process.env.OWNER;
 const escrow =  process.env.ESCROW;

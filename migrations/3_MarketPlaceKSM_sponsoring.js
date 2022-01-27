@@ -6,7 +6,8 @@ const amountToSend =  process.env.AMOUNT || 500;
 
 const ContractHelper = artifacts.require('interfaces/ContractHelpers.sol');
 const MarketPlaceKSM = artifacts.require('MarketPlace.sol');
-const implMPAddr = '0xfCF099a0abD15646A61470708969a92e4F663fcC'
+// const implMPAddr = '0xcf2ac9a59bd292C4634B41ceEd93C2307B45812A'
+// const admMPAddr = '0xA7a7d5Caa966Ee4cd76D95A426f5E9334eBb753B'
 var mp;
 
 module.exports = async function(deployer,_network, addresses) {
@@ -20,9 +21,9 @@ module.exports = async function(deployer,_network, addresses) {
       //  console.log ('toggleAllowlist',  await ch.toggleAllowlist(mp.address, false, {from:owner}));
       var tx;
       
-      console.log ('switch off sponsoring before send funds' );
+      console.log ('switch off sponsoring before send funds MP' );
       tx = await ch.toggleSponsoring(mp.address, false, {from:owner})
-      console.log (tx.receipt ); 
+      // console.log (tx.receipt ); 
        var balance = await web3.eth.getBalance( mp.address); //Will give value in.
 
       console.log ("balance MP before",  web3.utils.fromWei(balance)   ); 
@@ -34,31 +35,50 @@ module.exports = async function(deployer,_network, addresses) {
       console.log ("balance MP after", web3.utils.fromWei(balance)  ); 
       console.log ('toggle Sponsoring' );
       tx = await ch.toggleSponsoring(mp.address, true, {from:owner})
-      console.log (tx.receipt ); 
+      // console.log (tx.receipt ); 
       console.log ("set SponsoringRateLimit" ); 
       tx = await ch.setSponsoringRateLimit(mp.address, 0, {from:owner})
-      console.log (tx.receipt ); 
+      // console.log (tx.receipt ); 
        
-      console.log ('switch off sponsoring before send funds' );
+    /*   console.log ('switch off sponsoring before send funds implMPAddr' );
       tx = await ch.toggleSponsoring(implMPAddr, false, {from:owner})
-      console.log (tx.receipt ); 
+      // console.log (tx.receipt ); 
        var balance = await web3.eth.getBalance( implMPAddr); //Will give value in.
 
-      console.log ("balance MP before",  web3.utils.fromWei(balance)   ); 
+      console.log ("balance implMPAddr before",  web3.utils.fromWei(balance)   ); 
        console.log ("send funds", amountToSend ); 
 
       tx = await web3.eth.sendTransaction({ from: owner, to: implMPAddr, value: amountToSendW }) 
        balance = await  web3.eth.getBalance( implMPAddr); //Will give value in.
       
-      console.log ("balance MP after", web3.utils.fromWei(balance)  ); 
+      console.log ("balance implMPAddr after", web3.utils.fromWei(balance)  ); 
       console.log ('toggle Sponsoring' );
       tx = await ch.toggleSponsoring(implMPAddr, true, {from:owner})
-      console.log (tx.receipt ); 
+      // console.log (tx.receipt ); 
       console.log ("set SponsoringRateLimit" ); 
       tx = await ch.setSponsoringRateLimit(implMPAddr, 0, {from:owner})
-      console.log (tx.receipt ); 
+      // console.log (tx.receipt ); 
        
-       
+      
+      console.log ('switch off sponsoring before send funds admMPAddr' );
+      tx = await ch.toggleSponsoring(admMPAddr, false, {from:owner})
+      // console.log (tx.receipt ); 
+       var balance = await web3.eth.getBalance( admMPAddr); //Will give value in.
+
+      console.log ("balance admMPAddr before",  web3.utils.fromWei(balance)   ); 
+       console.log ("send funds", amountToSend ); 
+
+      tx = await web3.eth.sendTransaction({ from: owner, to: admMPAddr, value: amountToSendW }) 
+       balance = await  web3.eth.getBalance( admMPAddr); //Will give value in.
+      
+      console.log ("balance admMPAddr after", web3.utils.fromWei(balance)  ); 
+      console.log ('toggle Sponsoring' );
+      tx = await ch.toggleSponsoring(admMPAddr, true, {from:owner})
+      // console.log (tx.receipt ); 
+      console.log ("set SponsoringRateLimit" ); 
+      tx = await ch.setSponsoringRateLimit(admMPAddr, 0, {from:owner})
+      // console.log (tx.receipt ); 
+        */
        /* 
         var addresses = require ("../addresses.json");
       addresses[networkId].marketplace = mp.address;
