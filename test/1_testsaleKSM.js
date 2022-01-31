@@ -14,6 +14,7 @@ contract ("MarketPlace for KSM", accounts => {
     const idNFT = 1234;
     const price = 1000;
     const depoSum = 1500;
+    const withdrawSum  = 150;
     const addrKSM = web3.utils.toChecksumAddress("0x0000000000000000000000000000000000000002")
     
     const owner = accounts [0] || process.env.OWNER;
@@ -76,9 +77,21 @@ contract ("MarketPlace for KSM", accounts => {
        assert (accounts[2] == newOwner, "accounts2 != t721.ownerOf(idNFT)", accounts[2],  newOwner );
 
 
-    }) //, 
+    }),
+    
+    it ("5.1 withdrawing some", async () => { 
 
-     it ("5. withdrawing", async () => { 
+        const balanceKSM0 = await mpKSM.balanceKSM(owner)
+        await  mpKSM.withdrawKSM (withdrawSum,  owner);
+      
+        const balanceKSM1 = await mpKSM.balanceKSM(owner)
+         assert ( balanceKSM0 - withdrawSum == balanceKSM1, "withdrawing wrong sum ", balanceKSM0.toNumber(), withdrawSum, balanceKSM1.toNumber(),  );
+  
+  
+      }),
+ //, 
+
+     it ("5.2 withdrawing all", async () => { 
 
         await  mpKSM.withdrawAllKSM (owner);
       
